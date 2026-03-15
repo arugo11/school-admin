@@ -19,3 +19,8 @@
 - Switched the public deploy target from `static website + container app` to `single Azure Container App` because `az storage` and new managed-environment creation were blocked in this subscription.
 - Reused the existing `sit-copilot-env` Container Apps environment after hitting the regional environment quota in Japan East.
 - Served the built React app from FastAPI in the container image and moved frontend build assets to `/app-assets` to avoid conflicting with backend `/assets`.
+- Added a DB-backed student management layer on top of the existing SQLite store and kept `uploads` / `approvals` / `replays` compatible.
+- Chose `SQLite + FTS5 + local hash embeddings` for MVP RAG because only the chat deployment `sit-copilot-demo-chat` exists in Azure OpenAI and no embedding deployment was available.
+- Promoted `/students` into the primary dashboard with overview cards plus right-pane detail, while keeping the existing upload -> OCR -> analysis -> homework approval flow intact.
+- Stored seeded student documents, metrics, homework history, RAG chunks, and state snapshots in DB so student context no longer depends on raw text files.
+- Used deterministic fallback summary / recommendation generation as the default path, with AOAI kept for smoke-tested live connectivity rather than making the demo depend on a second unstable prompt path.

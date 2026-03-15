@@ -1,4 +1,17 @@
-import type { AnalysisResult, HomeworkApproval, NormalizedOcr, ProblemRegradeResponse, StudentProfile, UploadResponse } from './types'
+import type {
+  AnalysisResult,
+  HomeworkApproval,
+  NormalizedOcr,
+  ProblemRegradeResponse,
+  RagHomeworkRecommendation,
+  StudentDocument,
+  StudentDocumentCreateRequest,
+  StudentHomeworkHistoryItem,
+  StudentOverviewResponse,
+  StudentProfile,
+  StudentStateSummary,
+  UploadResponse
+} from './types'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -30,8 +43,38 @@ export function fetchStudents(): Promise<StudentProfile[]> {
   return request<StudentProfile[]>('/api/students')
 }
 
+export function fetchStudentsOverview(): Promise<StudentOverviewResponse> {
+  return request<StudentOverviewResponse>('/api/students/overview')
+}
+
 export function fetchStudent(studentId: string): Promise<StudentProfile> {
   return request<StudentProfile>(`/api/students/${studentId}`)
+}
+
+export function fetchStudentSummary(studentId: string): Promise<StudentStateSummary> {
+  return request<StudentStateSummary>(`/api/students/${studentId}/summary`)
+}
+
+export function refreshStudentSummary(studentId: string): Promise<StudentStateSummary> {
+  return request<StudentStateSummary>(`/api/students/${studentId}/refresh-summary`, {
+    method: 'POST'
+  })
+}
+
+export function fetchStudentDocuments(studentId: string): Promise<StudentDocument[]> {
+  return request<StudentDocument[]>(`/api/students/${studentId}/documents`)
+}
+
+export function createStudentDocument(studentId: string, payload: StudentDocumentCreateRequest): Promise<StudentDocument> {
+  return request<StudentDocument>(`/api/students/${studentId}/documents`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+}
+
+export function fetchStudentHomeworkHistory(studentId: string): Promise<StudentHomeworkHistoryItem[]> {
+  return request<StudentHomeworkHistoryItem[]>(`/api/students/${studentId}/homework-history`)
 }
 
 export async function uploadWorksheet(studentId: string, file: File): Promise<UploadResponse> {
@@ -85,5 +128,17 @@ export function approveHomework(payload: HomeworkApproval): Promise<HomeworkAppr
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
+  })
+}
+
+export function fetchRagHomeworkRecommendation(studentId: string, normalizedOcr: NormalizedOcr, analysis?: AnalysisResult): Promise<RagHomeworkRecommendation> {
+  return request('/api/homework/rag-recommend', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      student_id: studentId,
+      normalized_ocr: normalizedOcr,
+      analysis
+    })
   })
 }

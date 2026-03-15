@@ -9,6 +9,10 @@ export type StudentProfile = {
   weakness_history: string[]
   preferred_difficulty: string
   attention_level: 'low' | 'medium' | 'high' | 'urgent'
+  homework_completion_rate?: number | null
+  one_line_analysis?: string | null
+  recommended_action?: string | null
+  latest_summary_generated_at?: string | null
 }
 
 export type CatalogProblem = {
@@ -91,6 +95,8 @@ export type AnalysisResult = {
   fallback_used: boolean
   source_mode: 'live'
   problem_feedback: ProblemFeedback[]
+  rag_context_used?: boolean
+  rag_cited_document_titles?: string[]
 }
 
 export type UploadResponse = {
@@ -112,4 +118,87 @@ export type HomeworkApproval = {
 export type ProblemRegradeResponse = {
   problem_feedback: ProblemFeedback
   analysis: AnalysisResult
+}
+
+export type StudentOverviewItem = {
+  student_id: string
+  display_name: string
+  grade: string
+  target_level: string
+  attention_level: 'low' | 'medium' | 'high' | 'urgent'
+  homework_completion_rate: number
+  one_line_analysis: string
+  recommended_action: string
+}
+
+export type StudentOverviewResponse = {
+  total_students: number
+  urgent_count: number
+  low_completion_count: number
+  counseling_priority_count: number
+  recommended_actions_today: number
+  students: StudentOverviewItem[]
+}
+
+export type StudentStateSummary = {
+  student_id: string
+  current_status: string
+  risk_signals: string[]
+  next_best_actions: string[]
+  recommended_response: string
+  one_line_analysis: string
+  recommended_action: string
+  cited_document_titles: string[]
+  generated_at: string
+  fallback_used: boolean
+}
+
+export type StudentDocument = {
+  document_id: number
+  student_id: string
+  document_type: 'test_report' | 'score_trend' | 'homework_history' | 'counseling_memo' | 'teacher_note' | 'attendance' | 'mock_exam'
+  title: string
+  body_text: string
+  source_system: string
+  authored_by: string
+  document_date: string
+  created_at: string
+  updated_at: string
+}
+
+export type StudentDocumentCreateRequest = {
+  document_type: StudentDocument['document_type']
+  title: string
+  body_text: string
+  source_system: string
+  authored_by: string
+  document_date: string
+}
+
+export type StudentHomeworkHistoryItem = {
+  homework_id: number
+  student_id: string
+  assigned_date: string
+  approved_problem_groups: string[]
+  expected_load: string
+  completion_status: string
+  teacher_comment: string
+  created_at: string
+}
+
+export type RecommendedProblemGroup = {
+  group_id: string
+  unit_name: string
+  difficulty: 'basic' | 'standard' | 'advanced'
+  reason: string
+  level_fit_comment: string
+  supporting_note: string
+  cited_document_titles: string[]
+  fallback_used: boolean
+}
+
+export type RagHomeworkRecommendation = {
+  student_id: string
+  recommended_problem_groups: RecommendedProblemGroup[]
+  fallback_used: boolean
 }

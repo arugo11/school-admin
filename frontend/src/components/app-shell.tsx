@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-frame">
       <header className="hero-bar">
         <div className="hero-copy">
-          <p className="wordmark">答案確認フロー</p>
+          <p className="wordmark">生徒別学習コンパス</p>
         </div>
         <div className="hero-status">
           {session.student ? <span className="student-chip">{session.student.display_name}</span> : <span className="student-chip subtle">生徒を選択</span>}
