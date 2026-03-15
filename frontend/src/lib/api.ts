@@ -2,6 +2,7 @@ import type {
   AnalysisResult,
   HomeworkApproval,
   NormalizedOcr,
+  ProcessingJob,
   ProblemRegradeResponse,
   RagHomeworkRecommendation,
   SchoolWorkProgressItem,
@@ -109,6 +110,21 @@ export function runOcr(studentId: string, sourceImageId: string | string[]): Pro
   })
 }
 
+export function enqueueAnalysis(studentId: string, sourceImageId: string | string[]): Promise<ProcessingJob> {
+  const body = Array.isArray(sourceImageId)
+    ? { student_id: studentId, source_image_ids: sourceImageId }
+    : { student_id: studentId, source_image_id: sourceImageId }
+  return request('/api/analysis/enqueue', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+export function fetchProcessingJob(jobId: string): Promise<ProcessingJob> {
+  return request(`/api/analysis/jobs/${jobId}`)
+}
+
 export function runAnalysis(studentId: string, normalizedOcr: NormalizedOcr, action: 'initial' | 'regenerate' | 'lighten' = 'initial'): Promise<AnalysisResult> {
   return request('/api/analysis/run', {
     method: 'POST',
@@ -145,14 +161,20 @@ export function approveHomework(payload: HomeworkApproval): Promise<HomeworkAppr
   })
 }
 
-export function fetchRagHomeworkRecommendation(studentId: string, normalizedOcr: NormalizedOcr, analysis?: AnalysisResult): Promise<RagHomeworkRecommendation> {
+export function fetchRagHomeworkRecommendation(
+  studentId: string,
+  normalizedOcr?: NormalizedOcr,
+  analysis?: AnalysisResult,
+  documentId?: number,
+): Promise<RagHomeworkRecommendation> {
   return request('/api/homework/rag-recommend', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       student_id: studentId,
       normalized_ocr: normalizedOcr,
-      analysis
+      analysis,
+      document_id: documentId,
     })
   })
 }

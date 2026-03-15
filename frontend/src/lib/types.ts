@@ -97,7 +97,7 @@ export type AnalysisResult = {
   recommended_homework: Recommendation[]
   teacher_note: string
   fallback_used: boolean
-  source_mode: 'live'
+  source_mode: 'live' | 'replay'
   problem_feedback: ProblemFeedback[]
   rag_context_used?: boolean
   rag_cited_document_titles?: string[]
@@ -181,6 +181,11 @@ export type StudentDocument = {
   source_system: string
   authored_by: string
   document_date: string
+  asset_paths?: string[]
+  payload?: {
+    normalized_ocr?: NormalizedOcr
+    analysis?: AnalysisResult
+  } | null
   created_at: string
   updated_at: string
 }
@@ -241,4 +246,19 @@ export type RagHomeworkRecommendation = {
   student_id: string
   recommended_problem_groups: RecommendedProblemGroup[]
   fallback_used: boolean
+}
+
+export type ProcessingJobStatus = 'queued' | 'running' | 'succeeded' | 'failed'
+
+export type ProcessingJob = {
+  job_id: string
+  student_id: string
+  source_image_ids: string[]
+  status: ProcessingJobStatus
+  progress_message: string
+  error_detail?: string | null
+  result_document_id?: number | null
+  created_at: string
+  started_at?: string | null
+  finished_at?: string | null
 }

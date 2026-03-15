@@ -275,6 +275,8 @@ class StudentDocumentCreateRequest(BaseModel):
     source_system: str = "manual"
     authored_by: str = "teacher"
     document_date: datetime
+    asset_paths: list[str] = Field(default_factory=list)
+    payload: dict[str, Any] | None = None
 
 
 class StudentDocumentResponse(StudentDocumentCreateRequest):
@@ -415,5 +417,31 @@ class RagHomeworkRecommendation(BaseModel):
 
 class RagHomeworkRequest(BaseModel):
     student_id: str
-    normalized_ocr: NormalizedOcrDocument
+    normalized_ocr: NormalizedOcrDocument | None = None
     analysis: AnalysisResult | None = None
+    document_id: int | None = None
+
+
+class AnalysisEnqueueRequest(BaseModel):
+    student_id: str
+    source_image_id: str | None = None
+    source_image_ids: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_source_ids(self) -> "AnalysisEnqueueRequest":
+        if self.source_image_id or self.source_image_ids:
+            return self
+        raise ValueError("source_image_id or source_image_ids is required")
+
+
+class ProcessingJob(BaseModel):
+    job_id: str
+    student_id: str
+    source_image_ids: list[str]
+    status: Literal["queued", "running", "succeeded", "failed"]
+    progress_message: str = ""
+    error_detail: str | None = None
+    result_document_id: int | None = None
+    created_at: datetime
+    started_at: datetime | None = None
+    finished_at: datetime | None = None

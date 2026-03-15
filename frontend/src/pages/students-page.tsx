@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import {
+  approveHomework,
   createStudentDocument,
+  fetchRagHomeworkRecommendation,
   fetchStudent,
   fetchStudentDocuments,
   fetchStudentHomeworkHistory,
@@ -10,10 +12,19 @@ import {
   fetchStudentsOverview,
   fetchStudentSummary,
   refreshStudentSummary,
+  resolveAssetUrl,
   updateStudentSchoolWorkProgress,
 } from '../lib/api'
 import { useDemo } from '../lib/demo-context'
-import type { SchoolWorkProgressItem, StudentDocument, StudentHomeworkHistoryItem, StudentOverviewItem, StudentProfile, StudentStateSummary } from '../lib/types'
+import type {
+  RecommendedProblemGroup,
+  SchoolWorkProgressItem,
+  StudentDocument,
+  StudentHomeworkHistoryItem,
+  StudentOverviewItem,
+  StudentProfile,
+  StudentStateSummary
+} from '../lib/types'
 import { SectionCard } from '../components/section-card'
 import { StudentCard } from '../components/student-card'
 
@@ -37,6 +48,9 @@ export function StudentsPage() {
   const [workTargetPages, setWorkTargetPages] = useState('0')
   const [workNote, setWorkNote] = useState('')
   const [workSaveBusy, setWorkSaveBusy] = useState(false)
+  const [ragRecommendation, setRagRecommendation] = useState<RecommendedProblemGroup[]>([])
+  const [ragBusy, setRagBusy] = useState(false)
+  const [homeworkApproveBusy, setHomeworkApproveBusy] = useState(false)
   const navigate = useNavigate()
   const { setStudent, setBanner, resetFlow } = useDemo()
 
@@ -78,6 +92,7 @@ export function StudentsPage() {
       setOpenDocumentTypes(documentPayload[0] ? [documentPayload[0].document_type] : [])
       setHomeworkHistory(homeworkPayload)
       setSchoolWorkProgress(schoolWorkPayload)
+      setRagRecommendation([])
       const firstWork = schoolWorkPayload[0]
       setWorkCompletionRate(String(firstWork?.completion_rate ?? 0))
       setWorkCompletedPages(String(firstWork?.completed_pages ?? 0))
@@ -159,6 +174,47 @@ export function StudentsPage() {
       setError((err as Error).message)
     } finally {
       setWorkSaveBusy(false)
+    }
+  }
+
+  async function handleGenerateHomeworkFromDocument() {
+    if (!selected || !selectedDocument) return
+    setRagBusy(true)
+    try {
+      const recommendation = await fetchRagHomeworkRecommendation(
+        selected.student_id,
+        selectedDocument.payload?.normalized_ocr,
+        selectedDocument.payload?.analysis,
+        selectedDocument.document_id,
+      )
+      setRagRecommendation(recommendation.recommended_problem_groups)
+      setBanner('大問単位の宿題提案を生成しました。')
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setRagBusy(false)
+    }
+  }
+
+  async function handleApproveGeneratedHomework() {
+    if (!selected || ragRecommendation.length === 0) return
+    setHomeworkApproveBusy(true)
+    try {
+      await approveHomework({
+        student_id: selected.student_id,
+        approved_problem_nos: ragRecommendation.map((item) => item.group_id),
+        removed_problem_nos: [],
+        approval_mode: 'teacher-approved-student-panel',
+        teacher_comment: '生徒詳細パネルで承認',
+        approved_at: new Date().toISOString(),
+      })
+      const homeworkPayload = await fetchStudentHomeworkHistory(selected.student_id)
+      setHomeworkHistory(homeworkPayload)
+      setBanner('宿題指示を承認して履歴へ保存しました。')
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setHomeworkApproveBusy(false)
     }
   }
 
@@ -340,6 +396,40 @@ export function StudentsPage() {
                       <div className="viewer-body">
                         <p>{selectedDocument.body_text}</p>
                       </div>
+                      {selectedDocument.asset_paths && selectedDocument.asset_paths.length > 0 ? (
+                        <div className="crop-strip">
+                          {selectedDocument.asset_paths.map((path) => (
+                            <a key={path} href={resolveAssetUrl(path)} target="_blank" rel="noreferrer" className="document-link">
+                              画像を開く: {path.split('/').pop()}
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
+                      {selectedDocument.document_type === 'test_report' && selectedDocument.payload?.analysis ? (
+                        <div className="analysis-panel">
+                          <h3>最新確認テスト分析</h3>
+                          <p>弱点単元: {selectedDocument.payload.analysis.weak_units.join(' / ') || 'なし'}</p>
+                          <p>誤答傾向: {selectedDocument.payload.analysis.error_patterns.join(' / ') || 'なし'}</p>
+                          <p>宿題負荷: {selectedDocument.payload.analysis.homework_load_fit}</p>
+                          <div className="detail-actions">
+                            <button className="secondary-btn compact-btn" disabled={ragBusy} onClick={() => void handleGenerateHomeworkFromDocument()}>
+                              {ragBusy ? '生成中...' : 'この分析から宿題指示を生成'}
+                            </button>
+                            <button className="primary-btn compact-btn" disabled={homeworkApproveBusy || ragRecommendation.length === 0} onClick={() => void handleApproveGeneratedHomework()}>
+                              {homeworkApproveBusy ? '承認中...' : '提案を承認して保存'}
+                            </button>
+                          </div>
+                          {ragRecommendation.length > 0 ? (
+                            <ul className="plain-list">
+                              {ragRecommendation.map((item) => (
+                                <li key={item.group_id}>
+                                  {item.group_id} / {item.unit_name} / {item.reason}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -376,7 +466,7 @@ export function StudentsPage() {
                       homework_completion_rate: selected.homework_completion_rate ?? 0,
                       one_line_analysis: summary.one_line_analysis,
                       recommended_action: summary.recommended_action,
-                    })}>この生徒で回答確認へ</button>
+                    })}>この生徒で撮影へ</button>
                   </div>
                 </div>
               </div>

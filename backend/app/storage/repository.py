@@ -7,6 +7,7 @@ from typing import Any
 from app.core.database import get_connection
 from app.schemas import (
     HomeworkApproval,
+    ProcessingJob,
     RagChunkSearchResult,
     SchoolWorkProgressItem,
     SchoolWorkProgressUpdateRequest,
@@ -152,8 +153,11 @@ class Repository:
                 for document in build_seed_documents(row["student_id"]):
                     created = conn.execute(
                         """
-                        INSERT INTO student_documents (student_id, document_type, title, body_text, source_system, authored_by, document_date, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO student_documents (
+                            student_id, document_type, title, body_text, source_system, authored_by, document_date,
+                            asset_paths_json, payload_json, created_at, updated_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             document["student_id"],
@@ -163,6 +167,8 @@ class Repository:
                             document["source_system"],
                             document["authored_by"],
                             document["document_date"],
+                            json.dumps(document.get("asset_paths", []), ensure_ascii=False),
+                            json.dumps(document.get("payload"), ensure_ascii=False) if document.get("payload") is not None else None,
                             now,
                             now,
                         ),
@@ -274,8 +280,11 @@ class Repository:
         with get_connection() as conn:
             cursor = conn.execute(
                 """
-                INSERT INTO student_documents (student_id, document_type, title, body_text, source_system, authored_by, document_date, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO student_documents (
+                    student_id, document_type, title, body_text, source_system, authored_by, document_date,
+                    asset_paths_json, payload_json, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     student_id,
@@ -285,6 +294,8 @@ class Repository:
                     payload.source_system,
                     payload.authored_by,
                     payload.document_date.isoformat(),
+                    json.dumps(payload.asset_paths, ensure_ascii=False),
+                    json.dumps(payload.payload, ensure_ascii=False) if payload.payload is not None else None,
                     now,
                     now,
                 ),
@@ -292,6 +303,92 @@ class Repository:
             self._index_document(conn, cursor.lastrowid, student_id, payload.document_type, payload.title, payload.body_text, payload.document_date.isoformat())
             row = conn.execute("SELECT * FROM student_documents WHERE document_id = ?", (cursor.lastrowid,)).fetchone()
         return self._row_to_document(row)
+
+    def get_student_document(self, student_id: str, document_id: int) -> StudentDocumentResponse | None:
+        with get_connection() as conn:
+            row = conn.execute(
+                """
+                SELECT * FROM student_documents
+                WHERE student_id = ? AND document_id = ?
+                """,
+                (student_id, document_id),
+            ).fetchone()
+        if not row:
+            return None
+        return self._row_to_document(row)
+
+    def create_processing_job(self, job: ProcessingJob) -> ProcessingJob:
+        with get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO processing_jobs (
+                    job_id, student_id, source_image_ids_json, status, progress_message, error_detail,
+                    result_document_id, created_at, started_at, finished_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job.job_id,
+                    job.student_id,
+                    json.dumps(job.source_image_ids, ensure_ascii=False),
+                    job.status,
+                    job.progress_message,
+                    job.error_detail,
+                    job.result_document_id,
+                    job.created_at.isoformat(),
+                    job.started_at.isoformat() if job.started_at else None,
+                    job.finished_at.isoformat() if job.finished_at else None,
+                ),
+            )
+        return job
+
+    def get_processing_job(self, job_id: str) -> ProcessingJob | None:
+        with get_connection() as conn:
+            row = conn.execute("SELECT * FROM processing_jobs WHERE job_id = ?", (job_id,)).fetchone()
+        if not row:
+            return None
+        return self._row_to_processing_job(row)
+
+    def update_processing_job(
+        self,
+        job_id: str,
+        *,
+        status: str | None = None,
+        progress_message: str | None = None,
+        error_detail: str | None = None,
+        result_document_id: int | None = None,
+        started_at: str | None = None,
+        finished_at: str | None = None,
+    ) -> ProcessingJob | None:
+        assignments: list[str] = []
+        params: list[Any] = []
+        if status is not None:
+            assignments.append("status = ?")
+            params.append(status)
+        if progress_message is not None:
+            assignments.append("progress_message = ?")
+            params.append(progress_message)
+        if error_detail is not None:
+            assignments.append("error_detail = ?")
+            params.append(error_detail)
+        if result_document_id is not None:
+            assignments.append("result_document_id = ?")
+            params.append(result_document_id)
+        if started_at is not None:
+            assignments.append("started_at = ?")
+            params.append(started_at)
+        if finished_at is not None:
+            assignments.append("finished_at = ?")
+            params.append(finished_at)
+        if not assignments:
+            return self.get_processing_job(job_id)
+        params.append(job_id)
+        with get_connection() as conn:
+            conn.execute(f"UPDATE processing_jobs SET {', '.join(assignments)} WHERE job_id = ?", params)
+            row = conn.execute("SELECT * FROM processing_jobs WHERE job_id = ?", (job_id,)).fetchone()
+        if not row:
+            return None
+        return self._row_to_processing_job(row)
 
     def list_homework_history(self, student_id: str) -> list[StudentHomeworkHistoryItem]:
         with get_connection() as conn:
@@ -646,6 +743,22 @@ class Repository:
             source_system=row["source_system"],
             authored_by=row["authored_by"],
             document_date=row["document_date"],
+            asset_paths=json.loads(row["asset_paths_json"]) if row["asset_paths_json"] else [],
+            payload=json.loads(row["payload_json"]) if row["payload_json"] else None,
             created_at=row["created_at"],
             updated_at=row["updated_at"],
+        )
+
+    def _row_to_processing_job(self, row) -> ProcessingJob:
+        return ProcessingJob(
+            job_id=row["job_id"],
+            student_id=row["student_id"],
+            source_image_ids=json.loads(row["source_image_ids_json"]) if row["source_image_ids_json"] else [],
+            status=row["status"],
+            progress_message=row["progress_message"] or "",
+            error_detail=row["error_detail"],
+            result_document_id=row["result_document_id"],
+            created_at=row["created_at"],
+            started_at=row["started_at"],
+            finished_at=row["finished_at"],
         )

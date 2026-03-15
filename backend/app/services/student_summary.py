@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from app.clients.azure_openai import AzureOpenAIClient
 from app.schemas import (
     AnalysisResult,
-    CatalogProblem,
     NormalizedOcrDocument,
     RagChunkSearchResult,
     RagHomeworkRecommendation,
@@ -238,7 +237,7 @@ def build_rag_homework_recommendation(
     metrics: list[StudentMetric],
     summary: StudentStateSummary,
     homework_history: list[StudentHomeworkHistoryItem],
-    catalog: list[CatalogProblem],
+    homework_groups: list[dict],
     analysis: AnalysisResult | None,
     normalized_ocr: NormalizedOcrDocument,
 ) -> RagHomeworkRecommendation:
@@ -255,35 +254,37 @@ def build_rag_homework_recommendation(
     if any("分数" in term for term in weakness_terms):
         desired_units.add("分数計算")
     candidates = []
-    for problem in catalog:
-        if student.preferred_difficulty == "basic" and problem.difficulty == "advanced":
+    for group in homework_groups:
+        if student.preferred_difficulty == "basic" and group["difficulty"] == "advanced":
             continue
-        if student.preferred_difficulty == "standard" and metric_map.get("homework_completion_rate", 0) < 50 and problem.difficulty == "advanced":
+        if student.preferred_difficulty == "standard" and metric_map.get("homework_completion_rate", 0) < 50 and group["difficulty"] == "advanced":
             continue
-        score = problem.priority
-        if not desired_units or problem.unit_name in desired_units:
+        score = 3
+        if not desired_units or group["unit_name"] in desired_units:
             score += 4
         else:
             score -= 3
-        if problem.difficulty == student.preferred_difficulty:
+        if group["difficulty"] == student.preferred_difficulty:
             score += 2
-        if metric_map.get("homework_completion_rate", 100) < 50 and problem.estimated_minutes > 10:
+        if metric_map.get("homework_completion_rate", 100) < 50 and group["estimated_minutes"] > 10:
             score -= 2
-        if problem.problem_no in recent_groups:
+        if group["group_id"] in recent_groups:
             score -= 3
-        candidates.append((score, problem))
-    ranked = [problem for _, problem in sorted(candidates, key=lambda item: (-item[0], item[1].problem_no))]
+        if analysis and any(unit in group["unit_name"] for unit in analysis.weak_units):
+            score += 2
+        candidates.append((score, group))
+    ranked = [group for _, group in sorted(candidates, key=lambda item: (-item[0], item[1]["group_id"]))]
     group_count = 2 if metric_map.get("homework_completion_rate", 100) < 60 else 3
     groups = []
-    for problem in ranked:
-        if any(group.group_id == problem.problem_no for group in groups):
+    for group in ranked:
+        if any(item.group_id == group["group_id"] for item in groups):
             continue
         groups.append(
             RecommendedProblemGroup(
-                group_id=problem.problem_no,
-                unit_name=problem.unit_name,
-                difficulty=problem.difficulty,
-                reason=f"{problem.unit_name}の弱点を, 直近1か月の履歴も踏まえて補強する",
+                group_id=group["group_id"],
+                unit_name=group["unit_name"],
+                difficulty=group["difficulty"],
+                reason=f"{group['textbook_name']} / {group['topic_name']} を優先して弱点を補強する",
                 level_fit_comment=f"{student.preferred_difficulty}帯を超えすぎない範囲で設定",
                 supporting_note="類題の連続を避け, 達成可能な量を優先",
                 cited_document_titles=summary.cited_document_titles[:3],
@@ -292,13 +293,13 @@ def build_rag_homework_recommendation(
         )
         if len(groups) >= group_count:
             break
-    if not groups:
-        fallback = catalog[0]
+    if not groups and homework_groups:
+        fallback = homework_groups[0]
         groups = [
             RecommendedProblemGroup(
-                group_id=fallback.problem_no,
-                unit_name=fallback.unit_name,
-                difficulty=fallback.difficulty,
+                group_id=fallback["group_id"],
+                unit_name=fallback["unit_name"],
+                difficulty=fallback["difficulty"],
                 reason="安全側の基礎問題へ戻す",
                 level_fit_comment="現時点の学力帯に対して安全",
                 supporting_note="fallback",

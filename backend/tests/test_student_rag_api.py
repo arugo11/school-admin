@@ -82,6 +82,37 @@ def test_rag_recommend_returns_problem_groups_with_citations() -> None:
     assert len(first["cited_document_titles"]) == 3
 
 
+def test_rag_recommend_accepts_document_id_payload() -> None:
+    replay = client.get("/api/demo/s-03/replay").json()
+    created = client.post(
+        "/api/students/s-03/documents",
+        json={
+            "document_type": "test_report",
+            "title": "自動分析テスト",
+            "body_text": "テスト用",
+            "source_system": "test",
+            "authored_by": "system",
+            "document_date": "2026-03-16T12:00:00+00:00",
+            "asset_paths": ["data/uploads/dummy.png"],
+            "payload": {
+                "normalized_ocr": replay["normalized_ocr"],
+                "analysis": replay["analysis"],
+            },
+        },
+    ).json()
+    response = client.post(
+        "/api/homework/rag-recommend",
+        json={
+            "student_id": "s-03",
+            "document_id": created["document_id"],
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["recommended_problem_groups"]
+    assert payload["recommended_problem_groups"][0]["group_id"].startswith("G-")
+
+
 def test_school_work_progress_can_be_updated() -> None:
     response = client.post(
         "/api/students/s-01/school-work-progress",

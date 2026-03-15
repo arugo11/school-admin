@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS student_documents (
     source_system TEXT NOT NULL,
     authored_by TEXT NOT NULL,
     document_date TEXT NOT NULL,
+    asset_paths_json TEXT NOT NULL DEFAULT '[]',
+    payload_json TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -134,6 +136,19 @@ CREATE TABLE IF NOT EXISTS student_state_snapshots (
     generation_mode TEXT NOT NULL,
     fallback_used INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS processing_jobs (
+    job_id TEXT PRIMARY KEY,
+    student_id TEXT NOT NULL,
+    source_image_ids_json TEXT NOT NULL,
+    status TEXT NOT NULL,
+    progress_message TEXT NOT NULL DEFAULT '',
+    error_detail TEXT,
+    result_document_id INTEGER,
+    created_at TEXT NOT NULL,
+    started_at TEXT,
+    finished_at TEXT
+);
 """
 
 
@@ -152,4 +167,9 @@ def get_connection() -> sqlite3.Connection:
     snapshot_columns = {row["name"] for row in conn.execute("PRAGMA table_info(student_state_snapshots)").fetchall()}
     if "source_rankings" not in snapshot_columns:
         conn.execute("ALTER TABLE student_state_snapshots ADD COLUMN source_rankings TEXT NOT NULL DEFAULT '[]'")
+    document_columns = {row["name"] for row in conn.execute("PRAGMA table_info(student_documents)").fetchall()}
+    if "asset_paths_json" not in document_columns:
+        conn.execute("ALTER TABLE student_documents ADD COLUMN asset_paths_json TEXT NOT NULL DEFAULT '[]'")
+    if "payload_json" not in document_columns:
+        conn.execute("ALTER TABLE student_documents ADD COLUMN payload_json TEXT")
     return conn

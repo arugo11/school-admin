@@ -211,7 +211,7 @@ export function AnalysisPage() {
             <button className="secondary-btn" disabled={!!busyAction} onClick={() => rerun('lighten')}>
               {busyAction === 'lighten' ? '調整中...' : '軽くする'}
             </button>
-            <button className="primary-btn" onClick={() => navigate('/homework-review')}>宿題承認へ</button>
+            <button className="primary-btn" onClick={() => navigate('/students')}>生徒詳細で宿題提案へ</button>
           </div>
         </SectionCard>
         <SectionCard title="提案問題">

@@ -42,7 +42,7 @@ export function StudentCard({
         <p className="student-summary">{student.one_line_analysis}</p>
       </button>
       <button className="secondary-btn compact-btn" onClick={() => onStartFlow(student)}>
-        この生徒で答案確認へ
+        この生徒で撮影へ
       </button>
     </article>
   )

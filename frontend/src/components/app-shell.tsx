@@ -6,9 +6,7 @@ import { useDemo } from '../lib/demo-context'
 const steps = [
   { to: '/students', label: '生徒一覧' },
   { to: '/upload', label: 'アップロード' },
-  { to: '/ocr-review', label: '回答確認' },
-  { to: '/analysis', label: '分析' },
-  { to: '/homework-review', label: '宿題提案' }
+  { to: '/analysis', label: '分析（任意）' }
 ]
 
 export function AppShell({ children }: { children: ReactNode }) {
