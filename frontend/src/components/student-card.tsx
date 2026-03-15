@@ -18,7 +18,6 @@ export function StudentCard({ student, onSelect }: { student: StudentProfile; on
         </div>
         <span className={`attention-pill ${student.attention_level}`}>{attentionLabel}</span>
       </div>
-      <p className="student-summary">{student.persona_summary}</p>
       <div className="student-metrics">
         <div>
           <span>平均点</span>
@@ -29,7 +28,6 @@ export function StudentCard({ student, onSelect }: { student: StudentProfile; on
           <strong>{student.weakness_history[0] ?? '確認中'}</strong>
         </div>
       </div>
-      <p className="student-footnote">宿題メモ: {student.homework_style_notes}</p>
     </button>
   )
 }

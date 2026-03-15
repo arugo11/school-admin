@@ -126,7 +126,7 @@ def recommend_by_rules(
     ]
     rationale = [
         f"OCRから {normalized_ocr.ocr_confidence_summary.low_confidence_count} 件の要確認箇所が見つかった",
-        f"{student.display_name} には {len(recs)} 問の短い復習セットを優先した",
+        f"{len(recs)} 問の短い復習セットを優先した",
     ]
     rationale.extend(manifest_rationale)
     return AnalysisResult(

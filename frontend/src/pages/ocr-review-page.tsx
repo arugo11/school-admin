@@ -27,7 +27,7 @@ export function OcrReviewPage() {
 
   return (
     <div className="page-grid">
-      <SectionCard title="OCR確認" subtitle="画像と抽出結果を確認し、必要な箇所を修正します。">
+      <SectionCard title="OCR確認">
         <div className="review-layout">
           <div className="image-stage">
             {session.previewUrl ? <img className="sheet-preview" src={session.previewUrl} alt="uploaded worksheet" /> : <div className="empty-state">画像プレビューはアップロード後に表示されます。</div>}
@@ -40,7 +40,7 @@ export function OcrReviewPage() {
                 <ul>
                   {current.ocr_confidence_summary.notes.map((note) => <li key={note}>{note}</li>)}
                 </ul>
-              ) : <p>大きな不確実箇所は見つかっていません。</p>}
+              ) : <p>要確認はありません。</p>}
             </div>
             <div className="ocr-list">
               {current.items.map((item, index) => (

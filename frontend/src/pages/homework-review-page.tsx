@@ -46,7 +46,7 @@ export function HomeworkReviewPage() {
 
   return (
     <div className="page-grid detail-layout">
-      <SectionCard title="宿題承認" subtitle="問題を調整して承認します。">
+      <SectionCard title="宿題承認">
         <div className="recommendation-list">
           {session.analysis.recommended_homework.map((item: Recommendation) => {
             const active = !removed.includes(item.problem_no)
@@ -74,7 +74,7 @@ export function HomeworkReviewPage() {
           <button className="primary-btn" disabled={busy || selectedRecommendations.length === 0} onClick={approve}>{busy ? '承認中...' : 'この内容で承認'}</button>
         </div>
       </SectionCard>
-      <SectionCard title="承認内容" subtitle="承認対象の問題を一覧で確認します。">
+      <SectionCard title="承認内容">
         <ul className="plain-list">
           {selectedRecommendations.map((item) => <li key={item.problem_no}>{item.problem_no}: {item.reason}</li>)}
         </ul>

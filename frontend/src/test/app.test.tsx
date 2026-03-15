@@ -31,5 +31,7 @@ describe('App', () => {
       </MemoryRouter>
     )
     await waitFor(() => expect(screen.getByText('生徒C')).toBeInTheDocument())
+    expect(screen.queryByText('努力型')).not.toBeInTheDocument()
+    expect(screen.queryByText(/宿題メモ:/)).not.toBeInTheDocument()
   })
 })
