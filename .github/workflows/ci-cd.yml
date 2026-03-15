@@ -1,0 +1,143 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: school-admin-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Test And Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+
+      - name: Install Root Node Dependencies
+        run: npm ci
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Install Backend Dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r backend/requirements.txt
+        shell: bash
+
+      - name: Run Backend Tests
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=backend pytest backend/tests -q
+        shell: bash
+
+      - name: Run Frontend Tests
+        run: npm test
+        working-directory: frontend
+
+      - name: Run Frontend Build
+        run: npm run build
+        working-directory: frontend
+
+  deploy:
+    name: Deploy To Azure
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+      RG: school-admin-demo-rg
+      LOCATION: japaneast
+      LOG_WORKSPACE: school-admin-demo-logs
+      CONTAINER_ENV: school-admin-demo-env
+      CONTAINER_ENV_RG: school-admin-demo-rg
+      FALLBACK_CONTAINER_ENV: sit-copilot-env
+      FALLBACK_CONTAINER_ENV_RG: sit-copilot
+      ACR_NAME: schooladmindemoacr23088
+      CONTAINER_APP: school-admin-demo-api
+      IMAGE_NAME: school-admin-api
+      VISION_RG: school-admin-precheck-rg
+      VISION_ACCOUNT: schooladminocr23088
+      AOAI_RG: sit-copilot
+      AOAI_ACCOUNT: sitcopilotaoai23088
+      AOAI_DEPLOYMENT: sit-copilot-demo-chat
+      API_VERSION: 2024-10-21
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+
+      - name: Install Root Node Dependencies
+        run: npm ci
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure Container Apps Extension
+        run: az extension add --name containerapp --upgrade --yes
+
+      - name: Show Azure Context
+        run: az account show
+
+      - name: Deploy Application
+        run: ./scripts/azure_deploy_web.sh | tee deploy.log
+        shell: bash
+
+      - name: Export Deploy URL
+        run: |
+          API_URL="$(grep '^API_URL=' deploy.log | tail -n 1 | cut -d= -f2-)"
+          echo "API_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "Deployed URL: $API_URL"
+        shell: bash
+
+      - name: Smoke Check Public API
+        run: curl --fail --silent "$API_URL/api/health"
+        shell: bash
+
+      - name: Install Playwright Browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Public Browser E2E
+        run: E2E_BASE_URL="$API_URL" E2E_ROUTE_TIMEOUT_MS=420000 node scripts/e2e_browser_live.mjs
+        shell: bash
