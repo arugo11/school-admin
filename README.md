@@ -1,7 +1,7 @@
 # School Admin MVP
 
 iPad-first demo web app for cram-school math worksheet intake:
-`upload -> OCR review -> analysis -> homework approval`.
+`student dashboard -> upload -> OCR review -> analysis -> homework approval`.
 
 ## Stack
 - Backend: FastAPI + Pydantic + SQLite/files
@@ -54,6 +54,22 @@ Stop both.
 ## Demo Modes
 - `Replay mode`: uses `data/replays/s-03.json` and never depends on Azure during the flow.
 - `Live mode`: uploads the worksheet, calls Azure Vision Read, then Azure OpenAI or safe fallback analysis.
+
+## Student RAG Dashboard
+- `/students` now shows classroom overview, 6 student panels, and a right-side detail pane.
+- Student context is stored in SQLite tables:
+  - `students`
+  - `student_documents`
+  - `student_metrics`
+  - `homework_history`
+  - `rag_chunks`
+  - `student_state_snapshots`
+- RAG uses DB-backed documents plus local hash embeddings and SQLite FTS5.
+- Refresh all student summaries with:
+```bash
+source /home/argo/school-admin/.venv/bin/activate
+PYTHONPATH=backend python scripts/refresh_student_summaries.py
+```
 
 ## Validation Commands
 ```bash

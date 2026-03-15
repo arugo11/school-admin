@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { approveHomework, runAnalysis } from '../lib/api'
 import { useDemo } from '../lib/demo-context'
-import type { Recommendation } from '../lib/types'
+import type { RecommendedProblemGroup, Recommendation } from '../lib/types'
 import { SectionCard } from '../components/section-card'
 
 export function HomeworkReviewPage() {
@@ -14,8 +14,10 @@ export function HomeworkReviewPage() {
   const navigate = useNavigate()
 
   const selectedRecommendations = useMemo(() => (
-    session.analysis?.recommended_homework.filter((item) => !removed.includes(item.problem_no)) ?? []
-  ), [session.analysis, removed])
+    session.ragRecommendation?.recommended_problem_groups.filter((item) => !removed.includes(item.group_id))
+    ?? session.analysis?.recommended_homework.filter((item) => !removed.includes(item.problem_no))
+    ?? []
+  ), [session.analysis, session.ragRecommendation, removed])
 
   if (!session.student || !session.normalizedOcr || !session.analysis) {
     return <div className="empty-state">宿題候補がありません。分析から進めてください。</div>
@@ -32,7 +34,7 @@ export function HomeworkReviewPage() {
     setBusy(true)
     const approval = await approveHomework({
       student_id: session.student!.student_id,
-      approved_problem_nos: selectedRecommendations.map((item) => item.problem_no),
+      approved_problem_nos: selectedRecommendations.map((item) => 'group_id' in item ? item.group_id : item.problem_no),
       removed_problem_nos: removed,
       approval_mode: 'teacher-approved',
       teacher_comment: teacherComment,
@@ -46,15 +48,17 @@ export function HomeworkReviewPage() {
 
   return (
     <div className="page-grid detail-layout">
-      <SectionCard title="宿題承認" subtitle="問題を調整して承認します。">
+      <SectionCard title="宿題承認">
         <div className="recommendation-list">
-          {session.analysis.recommended_homework.map((item: Recommendation) => {
-            const active = !removed.includes(item.problem_no)
+          {(session.ragRecommendation?.recommended_problem_groups ?? session.analysis.recommended_homework).map((item: Recommendation | RecommendedProblemGroup) => {
+            const problemNo = 'group_id' in item ? item.group_id : item.problem_no
+            const active = !removed.includes(problemNo)
             return (
-              <button key={item.problem_no} className={active ? 'recommendation-card active' : 'recommendation-card muted-card'} onClick={() => setRemoved((prev) => prev.includes(item.problem_no) ? prev.filter((value) => value !== item.problem_no) : [...prev, item.problem_no])}>
-                <strong>{item.problem_no}</strong>
+              <button key={problemNo} className={active ? 'recommendation-card active' : 'recommendation-card muted-card'} onClick={() => setRemoved((prev) => prev.includes(problemNo) ? prev.filter((value) => value !== problemNo) : [...prev, problemNo])}>
+                <strong>{problemNo}</strong>
                 <span>{item.difficulty}</span>
                 <p>{item.reason}</p>
+                {'level_fit_comment' in item ? <small>{item.level_fit_comment}</small> : null}
                 <small>{active ? '採用中。タップで外す' : '除外済み。タップで戻す'}</small>
               </button>
             )
@@ -74,9 +78,12 @@ export function HomeworkReviewPage() {
           <button className="primary-btn" disabled={busy || selectedRecommendations.length === 0} onClick={approve}>{busy ? '承認中...' : 'この内容で承認'}</button>
         </div>
       </SectionCard>
-      <SectionCard title="承認内容" subtitle="承認対象の問題を一覧で確認します。">
+      <SectionCard title="承認内容">
         <ul className="plain-list">
-          {selectedRecommendations.map((item) => <li key={item.problem_no}>{item.problem_no}: {item.reason}</li>)}
+          {selectedRecommendations.map((item) => {
+            const problemNo = 'group_id' in item ? item.group_id : item.problem_no
+            return <li key={problemNo}>{problemNo}: {item.reason}</li>
+          })}
         </ul>
       </SectionCard>
     </div>

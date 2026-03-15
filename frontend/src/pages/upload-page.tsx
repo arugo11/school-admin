@@ -1,18 +1,30 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-import { runOcr, uploadWorksheet } from '../lib/api'
+import { enqueueAnalysis, fetchProcessingJob, uploadWorksheet } from '../lib/api'
 import { useDemo } from '../lib/demo-context'
 import { SectionCard } from '../components/section-card'
+import type { ProcessingJob } from '../lib/types'
 
 export function UploadPage() {
-  const { session, setUpload, setNormalizedOcr, setPreviewUrl, setBanner } = useDemo()
+  const { session, setUpload, setPreviewUrl, setBanner } = useDemo()
   const [busy, setBusy] = useState(false)
+  const [job, setJob] = useState<ProcessingJob>()
   const [error, setError] = useState<string>()
-  const navigate = useNavigate()
 
   if (!session.student) {
     return <div className="empty-state">先に生徒を選んでください。</div>
+  }
+
+  async function pollJob(jobId: string) {
+    for (let index = 0; index < 120; index += 1) {
+      const latest = await fetchProcessingJob(jobId)
+      setJob(latest)
+      if (latest.status === 'succeeded' || latest.status === 'failed') {
+        return latest
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+    }
+    return undefined
   }
 
   async function onFileChange(files: FileList | null) {
@@ -30,10 +42,17 @@ export function UploadPage() {
       }
       setUpload(uploads[uploads.length - 1])
       const sourceImageIds = uploads.map((upload) => upload.source_image_id)
-      const ocr = await runOcr(session.student!.student_id, sourceImageIds.length === 1 ? sourceImageIds[0] : sourceImageIds)
-      setNormalizedOcr(ocr.normalized_ocr)
-      setBanner('画像を読み取りました。')
-      navigate('/ocr-review')
+      const queued = await enqueueAnalysis(session.student!.student_id, sourceImageIds.length === 1 ? sourceImageIds[0] : sourceImageIds)
+      setJob(queued)
+      const finished = await pollJob(queued.job_id)
+      if (finished?.status === 'succeeded') {
+        setBanner('バックグラウンド処理が完了しました。生徒詳細で分析結果と宿題提案を確認できます。')
+      } else if (finished?.status === 'failed') {
+        setError(finished.error_detail ?? '処理に失敗しました。再撮影して再試行してください。')
+        setBanner('バックグラウンド処理に失敗しました。')
+      } else {
+        setError('処理がタイムアウトしました。しばらく待ってから生徒詳細を更新してください。')
+      }
     } catch (err) {
       setError((err as Error).message)
       setBanner('画像の読み取りに失敗しました。ファイルを確認して再試行してください。')
@@ -44,18 +63,23 @@ export function UploadPage() {
 
   return (
     <div className="page-grid detail-layout">
-      <SectionCard title="答案を取り込む" subtitle={`${session.student.display_name} の答案画像を選択します。`}>
+      <SectionCard title="答案を取り込む">
         <div className="upload-studio">
           <div className="image-stage">
-            {session.previewUrl ? <img className="sheet-preview" src={session.previewUrl} alt="worksheet preview" /> : <div className="empty-state">画像を選択するとプレビューが表示されます。</div>}
+            {session.previewUrl ? <img className="sheet-preview" src={session.previewUrl} alt="worksheet preview" /> : <div className="empty-state">画像を選択してください。</div>}
           </div>
           <div className="upload-panel">
-            <p className="lead-copy">計算過程と最終解答が見える画像を選択してください。</p>
+            <p className="lead-copy">{session.student.display_name} の答案画像を選択します。</p>
             <label className="upload-label">
-              <span>{busy ? '読み取り中...' : '画像を選ぶ / 撮る'}</span>
+              <span>{busy ? '処理を開始しています...' : '画像を選ぶ / 撮る'}</span>
               <input type="file" accept="image/*,.svg,.pdf" multiple disabled={busy} onChange={(event) => onFileChange(event.target.files)} />
             </label>
-            <p className="muted">複数画像を選んだ場合は、まとめてOCRへ渡します。</p>
+            <p className="muted">複数枚も選択できます。</p>
+            {job ? (
+              <div className="banner compact">
+                ステータス: {job.status} / {job.progress_message}
+              </div>
+            ) : null}
           </div>
         </div>
         {error ? <div className="error-box">{error}</div> : null}

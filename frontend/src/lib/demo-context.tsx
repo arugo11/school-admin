@@ -1,12 +1,13 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
-import type { AnalysisResult, HomeworkApproval, NormalizedOcr, StudentProfile, UploadResponse } from './types'
+import type { AnalysisResult, HomeworkApproval, NormalizedOcr, RagHomeworkRecommendation, StudentProfile, UploadResponse } from './types'
 
 type DemoSession = {
   student?: StudentProfile
   upload?: UploadResponse
   normalizedOcr?: NormalizedOcr
   analysis?: AnalysisResult
+  ragRecommendation?: RagHomeworkRecommendation
   approval?: HomeworkApproval
   previewUrl?: string
   banner?: string
@@ -18,6 +19,7 @@ type DemoContextValue = {
   setUpload: (upload: UploadResponse | undefined) => void
   setNormalizedOcr: (ocr: NormalizedOcr | undefined) => void
   setAnalysis: (analysis: AnalysisResult | undefined) => void
+  setRagRecommendation: (recommendation: RagHomeworkRecommendation | undefined) => void
   setApproval: (approval: HomeworkApproval | undefined) => void
   setPreviewUrl: (previewUrl: string | undefined) => void
   setBanner: (banner: string | undefined) => void
@@ -40,6 +42,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const setAnalysis = useCallback((analysis: AnalysisResult | undefined) => {
     setSession((prev) => ({ ...prev, analysis }))
   }, [])
+  const setRagRecommendation = useCallback((ragRecommendation: RagHomeworkRecommendation | undefined) => {
+    setSession((prev) => ({ ...prev, ragRecommendation }))
+  }, [])
   const setApproval = useCallback((approval: HomeworkApproval | undefined) => {
     setSession((prev) => ({ ...prev, approval }))
   }, [])
@@ -58,12 +63,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setStudent,
     setUpload,
     setNormalizedOcr,
-    setAnalysis,
-    setApproval,
+      setAnalysis,
+      setRagRecommendation,
+      setApproval,
     setPreviewUrl,
     setBanner,
     resetFlow
-  }), [session, setStudent, setUpload, setNormalizedOcr, setAnalysis, setApproval, setPreviewUrl, setBanner, resetFlow])
+  }), [session, setStudent, setUpload, setNormalizedOcr, setAnalysis, setRagRecommendation, setApproval, setPreviewUrl, setBanner, resetFlow])
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>
 }

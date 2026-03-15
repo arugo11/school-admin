@@ -3,6 +3,7 @@ from __future__ import annotations
 import mimetypes
 import logging
 import json
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -11,24 +12,65 @@ import httpx
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.core.config import settings
-from app.schemas import AnalysisRunRequest, HomeworkApproval, OcrNormalizeRequest, OcrRunRequest, ProblemRegradeRequest, ProblemRegradeResponse, UploadResponse
+from app.schemas import (
+    AnalysisEnqueueRequest,
+    AnalysisResult,
+    AnalysisRunRequest,
+    HomeworkApproval,
+    OcrNormalizeRequest,
+    NormalizedOcrDocument,
+    OcrRunRequest,
+    ProblemRegradeRequest,
+    ProblemRegradeResponse,
+    RagHomeworkRequest,
+    SchoolWorkProgressUpdateRequest,
+    StudentDocumentCreateRequest,
+    StudentOverviewResponse,
+    UploadResponse,
+    ProcessingJob,
+)
 from app.services.analysis import AnalysisService
-from app.services.data_store import load_catalog, load_students
+from app.services.data_store import load_catalog, load_homework_groups_catalog, load_students
 from app.services.llm_sheet_ocr import extract_llm_ocr_document
 from app.services.ocr_normalizer import build_ocr_debug_artifact, normalize_ocr_result, persist_ocr_debug_artifact
+from app.services.student_summary import build_fallback_summary, build_rag_homework_recommendation, generate_student_summary
 from app.storage.repository import Repository
 
 router = APIRouter(prefix="/api")
 logger = logging.getLogger("uvicorn.error")
 repo = Repository()
 analysis_service = AnalysisService()
+job_tasks: dict[str, asyncio.Task] = {}
 
 
 def _find_student(student_id: str):
-    for student in load_students():
-        if student.student_id == student_id:
-            return student
+    student = repo.get_student(student_id)
+    if student is not None:
+        return student
     raise HTTPException(status_code=404, detail="Student not found")
+
+
+async def _refresh_summary_async(student_id: str, generation_mode: str = "manual") -> dict:
+    student = _find_student(student_id)
+    metrics = repo.list_student_metrics(student_id)
+    documents = repo.list_student_documents(student_id)
+    if not documents:
+        raise HTTPException(status_code=404, detail="Student documents not found")
+    query = " ".join(student.weakness_history + [student.persona_summary])
+    chunks = repo.search_rag_chunks(student_id, query, limit=8)
+    summary = await generate_student_summary(
+        student=student,
+        metrics=metrics,
+        retrieved_chunks=chunks,
+        documents=documents,
+        client=analysis_service.client,
+    )
+    repo.save_student_summary(summary, generation_mode=generation_mode)
+    return summary.model_dump(mode="json")
+
+
+def _refresh_summary(student_id: str, generation_mode: str = "manual") -> dict:
+    return asyncio.run(_refresh_summary_async(student_id, generation_mode=generation_mode))
 
 
 def _resolve_upload_path(source_image_id: str) -> Path:
@@ -39,6 +81,14 @@ def _resolve_upload_path(source_image_id: str) -> Path:
 
 
 def _resolve_source_image_ids(request: OcrRunRequest) -> list[str]:
+    if request.source_image_ids:
+        return request.source_image_ids
+    if request.source_image_id:
+        return [request.source_image_id]
+    raise HTTPException(status_code=422, detail="source_image_id or source_image_ids is required")
+
+
+def _resolve_source_image_ids_from_enqueue(request: AnalysisEnqueueRequest) -> list[str]:
     if request.source_image_ids:
         return request.source_image_ids
     if request.source_image_id:
@@ -98,6 +148,106 @@ def _merge_normalized_documents(documents: list[tuple[Path, dict, object]]) -> t
     return _merge_raw_ocr_results(raw_docs), merged, debug_payload
 
 
+def _build_test_report_body(normalized_ocr: dict, analysis: dict) -> str:
+    weak_units = ", ".join(analysis.get("weak_units", [])) or "なし"
+    error_patterns = " / ".join(analysis.get("error_patterns", [])) or "特記事項なし"
+    rationale = " / ".join(analysis.get("analysis_rationale", [])) or "なし"
+    low_conf = normalized_ocr.get("ocr_confidence_summary", {}).get("low_confidence_count", 0)
+    lines = [
+        "確認テスト自動分析レポート",
+        f"弱点単元: {weak_units}",
+        f"誤答パターン: {error_patterns}",
+        f"OCR要確認件数: {low_conf}",
+        f"分析メモ: {rationale}",
+    ]
+    return "\n".join(lines)
+
+
+async def _run_ocr_pipeline(student_id: str, source_image_ids: list[str]) -> tuple[dict, object]:
+    student = _find_student(student_id)
+    upload_paths = [_resolve_upload_path(source_image_id) for source_image_id in source_image_ids]
+    normalized_source_id = source_image_ids[0] if len(source_image_ids) == 1 else f"batch-{source_image_ids[0]}-{len(source_image_ids)}"
+    llm_documents = []
+    for source_image_id, upload_path in zip(source_image_ids, upload_paths, strict=True):
+        source_relpath = str(upload_path.relative_to(settings.repo_root))
+        raw_payload, normalized_doc, debug_payload = await extract_llm_ocr_document(
+            image_path=upload_path,
+            student_id=student.student_id,
+            source_image_id=source_image_id,
+            source_image_relpath=source_relpath,
+            aoai_client=analysis_service.client,
+        )
+        timing = debug_payload.get("timing_ms", {})
+        logger.info(
+            "OCR stage timing: source_image_id=%s layout_ms=%s reading_ms=%s total_ms=%s",
+            source_image_id,
+            timing.get("layout_pass"),
+            timing.get("reading_pass"),
+            timing.get("total_ocr"),
+        )
+        llm_documents.append((upload_path, raw_payload, normalized_doc, debug_payload))
+    raw_ocr, normalized, debug_payload = _merge_normalized_documents([(path, raw_payload, doc) for path, raw_payload, doc, _ in llm_documents])
+    if len(llm_documents) == 1:
+        debug_payload = llm_documents[0][3]
+        raw_ocr = llm_documents[0][1]
+        normalized = llm_documents[0][2]
+    debug_artifact = persist_ocr_debug_artifact(normalized_source_id, debug_payload)
+    logger.info(
+        "OCR debug saved: source_image_id=%s test_id=%s items=%s path=%s",
+        normalized_source_id,
+        normalized.test_id,
+        len(normalized.items),
+        debug_artifact,
+    )
+    return raw_ocr, normalized
+
+
+async def _run_background_job(job_id: str, student_id: str, source_image_ids: list[str]) -> None:
+    started_at = datetime.now(timezone.utc).isoformat()
+    repo.update_processing_job(job_id, status="running", progress_message="OCRを実行しています...", started_at=started_at)
+    try:
+        raw_ocr, normalized = await _run_ocr_pipeline(student_id, source_image_ids)
+        repo.update_processing_job(job_id, progress_message="分析を実行しています...")
+        catalog = load_catalog()
+        student = _find_student(student_id)
+        analysis = await analysis_service.run(student, normalized, catalog, mode="live", action="initial")
+        payload = {"normalized_ocr": normalized.model_dump(), "analysis": analysis.model_dump()}
+        document = repo.add_student_document(
+            student_id,
+            StudentDocumentCreateRequest(
+                document_type="test_report",
+                title=f"{datetime.now(timezone.utc).astimezone().strftime('%Y-%m-%d')} 確認テスト自動分析",
+                body_text=_build_test_report_body(payload["normalized_ocr"], payload["analysis"]),
+                source_system="auto-analysis",
+                authored_by="system",
+                document_date=datetime.now(timezone.utc),
+                asset_paths=payload["normalized_ocr"].get("source_image_paths", []),
+                payload=payload,
+            ),
+        )
+        await _refresh_summary_async(student_id, generation_mode="auto_test_report")
+        finished_at = datetime.now(timezone.utc).isoformat()
+        repo.update_processing_job(
+            job_id,
+            status="succeeded",
+            progress_message="処理が完了しました。",
+            result_document_id=document.document_id,
+            finished_at=finished_at,
+        )
+    except Exception as exc:
+        logger.exception("Background processing failed: job_id=%s", job_id)
+        finished_at = datetime.now(timezone.utc).isoformat()
+        repo.update_processing_job(
+            job_id,
+            status="failed",
+            progress_message="処理に失敗しました。",
+            error_detail=str(exc),
+            finished_at=finished_at,
+        )
+    finally:
+        job_tasks.pop(job_id, None)
+
+
 @router.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -108,9 +258,75 @@ def get_students() -> list[dict]:
     return [student.model_dump() for student in load_students()]
 
 
+@router.get("/students/overview")
+def get_students_overview() -> dict:
+    load_students()
+    items = repo.build_overview_items()
+    if not all(item.one_line_analysis for item in items):
+        for student in load_students():
+            if repo.get_latest_student_summary(student.student_id) is None:
+                _refresh_summary(student.student_id, generation_mode="bootstrap")
+        items = repo.build_overview_items()
+    payload = StudentOverviewResponse(
+        total_students=len(items),
+        urgent_count=sum(1 for item in items if item.attention_level in {"high", "urgent"}),
+        low_completion_count=sum(1 for item in items if item.homework_completion_rate < 60),
+        counseling_priority_count=sum(1 for item in items if item.attention_level == "urgent"),
+        recommended_actions_today=sum(1 for item in items if item.recommended_action),
+        students=items,
+    )
+    return payload.model_dump()
+
+
 @router.get("/students/{student_id}")
 def get_student(student_id: str) -> dict:
     return _find_student(student_id).model_dump()
+
+
+@router.get("/students/{student_id}/summary")
+def get_student_summary(student_id: str) -> dict:
+    _find_student(student_id)
+    summary = repo.get_latest_student_summary(student_id)
+    if summary is None:
+        return _refresh_summary(student_id, generation_mode="bootstrap")
+    return summary.model_dump(mode="json")
+
+
+@router.post("/students/{student_id}/refresh-summary")
+def refresh_student_summary(student_id: str) -> dict:
+    return _refresh_summary(student_id, generation_mode="manual")
+
+
+@router.get("/students/{student_id}/documents")
+def get_student_documents(student_id: str) -> list[dict]:
+    _find_student(student_id)
+    return [document.model_dump(mode="json") for document in repo.list_student_documents(student_id)]
+
+
+@router.post("/students/{student_id}/documents")
+def create_student_document(student_id: str, payload: StudentDocumentCreateRequest) -> dict:
+    _find_student(student_id)
+    document = repo.add_student_document(student_id, payload)
+    _refresh_summary(student_id, generation_mode="document_update")
+    return document.model_dump(mode="json")
+
+
+@router.get("/students/{student_id}/homework-history")
+def get_student_homework_history(student_id: str) -> list[dict]:
+    _find_student(student_id)
+    return [item.model_dump(mode="json") for item in repo.list_homework_history(student_id)]
+
+
+@router.get("/students/{student_id}/school-work-progress")
+def get_student_school_work_progress(student_id: str) -> list[dict]:
+    _find_student(student_id)
+    return [item.model_dump(mode="json") for item in repo.list_school_work_progress(student_id)]
+
+
+@router.post("/students/{student_id}/school-work-progress")
+def update_student_school_work_progress(student_id: str, payload: SchoolWorkProgressUpdateRequest) -> dict:
+    _find_student(student_id)
+    return repo.upsert_school_work_progress(student_id, payload).model_dump(mode="json")
 
 
 @router.get("/catalog")
@@ -150,37 +366,9 @@ async def upload_file(student_id: str = Form(...), file: UploadFile = File(...))
 
 @router.post("/ocr/run")
 async def run_ocr(request: OcrRunRequest) -> dict:
-    student = _find_student(request.student_id)
     source_image_ids = _resolve_source_image_ids(request)
-    upload_paths = [_resolve_upload_path(source_image_id) for source_image_id in source_image_ids]
-    normalized_source_id = source_image_ids[0] if len(source_image_ids) == 1 else f"batch-{source_image_ids[0]}-{len(source_image_ids)}"
-    llm_documents = []
     try:
-        for source_image_id, upload_path in zip(source_image_ids, upload_paths, strict=True):
-            source_relpath = str(upload_path.relative_to(settings.repo_root))
-            raw_payload, normalized_doc, debug_payload = await extract_llm_ocr_document(
-                image_path=upload_path,
-                student_id=student.student_id,
-                source_image_id=source_image_id,
-                source_image_relpath=source_relpath,
-                aoai_client=analysis_service.client,
-            )
-            timing = debug_payload.get("timing_ms", {})
-            logger.info(
-                "OCR stage timing: source_image_id=%s layout_ms=%s reading_ms=%s total_ms=%s",
-                source_image_id,
-                timing.get("layout_pass"),
-                timing.get("reading_pass"),
-                timing.get("total_ocr"),
-            )
-            llm_documents.append(
-                (
-                    upload_path,
-                    raw_payload,
-                    normalized_doc,
-                    debug_payload,
-                )
-            )
+        raw_ocr, normalized = await _run_ocr_pipeline(request.student_id, source_image_ids)
     except httpx.HTTPStatusError as exc:
         status_code = exc.response.status_code
         if status_code == 429:
@@ -189,25 +377,37 @@ async def run_ocr(request: OcrRunRequest) -> dict:
                 detail="AI OCR is temporarily busy. Please wait about 30 seconds and try again.",
             ) from exc
         raise HTTPException(status_code=502, detail="AI OCR failed. Please try again.") from exc
-    raw_ocr, normalized, debug_payload = _merge_normalized_documents([(path, raw_payload, doc) for path, raw_payload, doc, _ in llm_documents])
-    if len(llm_documents) == 1:
-        debug_payload = llm_documents[0][3]
-        raw_ocr = llm_documents[0][1]
-        normalized = llm_documents[0][2]
-    debug_artifact = persist_ocr_debug_artifact(normalized_source_id, debug_payload)
-    logger.info(
-        "OCR debug saved: source_image_id=%s test_id=%s items=%s path=%s",
-        normalized_source_id,
-        normalized.test_id,
-        len(normalized.items),
-        debug_artifact,
-    )
     return {
         "source_mode": "live",
         "raw_ocr": raw_ocr,
         "normalized_ocr": normalized.model_dump(),
-        "debug_artifact_path": str(debug_artifact.relative_to(settings.repo_root)),
     }
+
+
+@router.post("/analysis/enqueue")
+async def enqueue_analysis(request: AnalysisEnqueueRequest) -> dict:
+    _find_student(request.student_id)
+    source_image_ids = _resolve_source_image_ids_from_enqueue(request)
+    job = ProcessingJob(
+        job_id=f"job-{uuid4().hex[:12]}",
+        student_id=request.student_id,
+        source_image_ids=source_image_ids,
+        status="queued",
+        progress_message="処理待機中です。",
+        created_at=datetime.now(timezone.utc),
+    )
+    repo.create_processing_job(job)
+    task = asyncio.create_task(_run_background_job(job.job_id, request.student_id, source_image_ids))
+    job_tasks[job.job_id] = task
+    return job.model_dump(mode="json")
+
+
+@router.get("/analysis/jobs/{job_id}")
+def get_analysis_job(job_id: str) -> dict:
+    job = repo.get_processing_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job.model_dump(mode="json")
 
 
 @router.post("/ocr/normalize")
@@ -278,3 +478,44 @@ async def regrade_problem(request: ProblemRegradeRequest) -> dict:
 def approve_homework(payload: HomeworkApproval) -> dict:
     approval = repo.save_approval(payload)
     return approval.model_dump(mode="json")
+
+
+@router.post("/homework/rag-recommend")
+async def rag_recommend_homework(payload: RagHomeworkRequest) -> dict:
+    student = _find_student(payload.student_id)
+    summary = repo.get_latest_student_summary(payload.student_id)
+    if summary is None:
+        summary = build_fallback_summary(
+            student,
+            repo.list_student_metrics(payload.student_id),
+            repo.search_rag_chunks(payload.student_id, " ".join(student.weakness_history), limit=8),
+            repo.list_student_documents(payload.student_id),
+        )
+        repo.save_student_summary(summary, generation_mode="rag-homework")
+    normalized_ocr = payload.normalized_ocr
+    analysis = payload.analysis
+    if payload.document_id is not None:
+        document = repo.get_student_document(payload.student_id, payload.document_id)
+        if document is None:
+            raise HTTPException(status_code=404, detail="Document not found")
+        if document.payload:
+            if normalized_ocr is None:
+                raw_normalized = document.payload.get("normalized_ocr")
+                if raw_normalized is not None:
+                    normalized_ocr = NormalizedOcrDocument.model_validate(raw_normalized)
+            if analysis is None:
+                raw_analysis = document.payload.get("analysis")
+                if raw_analysis is not None:
+                    analysis = AnalysisResult.model_validate(raw_analysis)
+    if normalized_ocr is None:
+        raise HTTPException(status_code=422, detail="normalized_ocr is required when document payload is unavailable")
+    recommendation = build_rag_homework_recommendation(
+        student=student,
+        metrics=repo.list_student_metrics(payload.student_id),
+        summary=summary,
+        homework_history=repo.list_homework_history(payload.student_id),
+        homework_groups=load_homework_groups_catalog(),
+        analysis=analysis,
+        normalized_ocr=normalized_ocr,
+    )
+    return recommendation.model_dump(mode="json")

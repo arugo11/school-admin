@@ -1,14 +1,12 @@
 import type { ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 
 import { useDemo } from '../lib/demo-context'
 
 const steps = [
   { to: '/students', label: '生徒一覧' },
   { to: '/upload', label: 'アップロード' },
-  { to: '/ocr-review', label: 'OCR確認' },
-  { to: '/analysis', label: '分析' },
-  { to: '/homework-review', label: '宿題承認' }
+  { to: '/analysis', label: '分析（任意）' }
 ]
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -18,12 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-frame">
       <header className="hero-bar">
         <div className="hero-copy">
-          <p className="eyebrow">School Admin</p>
-          <Link to="/students" className="wordmark">答案確認フロー</Link>
-          <p className="hero-summary">答案の取り込みから宿題承認までを一つの流れで進めます。</p>
-        </div>
-        <div className="hero-status">
-          {session.student ? <span className="student-chip">{session.student.display_name}</span> : <span className="student-chip subtle">生徒を選択</span>}
+          <p className="wordmark">school admin system</p>
         </div>
       </header>
       <nav className="step-nav">

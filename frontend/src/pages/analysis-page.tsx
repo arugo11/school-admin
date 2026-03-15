@@ -1,18 +1,46 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { regradeProblem, resolveAssetUrl, runAnalysis } from '../lib/api'
+import { fetchRagHomeworkRecommendation, regradeProblem, resolveAssetUrl, runAnalysis } from '../lib/api'
 import { useDemo } from '../lib/demo-context'
 import { SectionCard } from '../components/section-card'
+import type { RecommendedProblemGroup, Recommendation } from '../lib/types'
 
 export function AnalysisPage() {
-  const { session, setAnalysis, setBanner } = useDemo()
+  const { session, setAnalysis, setBanner, setRagRecommendation } = useDemo()
   const navigate = useNavigate()
   const [busyAction, setBusyAction] = useState<string>()
   const [expandedProblem, setExpandedProblem] = useState<string>()
   const [studentNote, setStudentNote] = useState('')
   const [regradeBusy, setRegradeBusy] = useState<string>()
   const [regradeError, setRegradeError] = useState<string>()
+  const [ragBusy, setRagBusy] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadRecommendation() {
+      if (!session.student || !session.normalizedOcr || !session.analysis) return
+      setRagBusy(true)
+      try {
+        const recommendation = await fetchRagHomeworkRecommendation(session.student.student_id, session.normalizedOcr, session.analysis)
+        if (!cancelled) {
+          setRagRecommendation(recommendation)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setBanner((err as Error).message)
+        }
+      } finally {
+        if (!cancelled) {
+          setRagBusy(false)
+        }
+      }
+    }
+    void loadRecommendation()
+    return () => {
+      cancelled = true
+    }
+  }, [session.student, session.normalizedOcr, session.analysis, setRagRecommendation, setBanner])
 
   if (!session.student || !session.normalizedOcr || !session.analysis) {
     return <div className="empty-state">分析結果がありません。OCR確認から進めてください。</div>
@@ -22,6 +50,7 @@ export function AnalysisPage() {
     setBusyAction(action)
     const analysis = await runAnalysis(session.student!.student_id, session.normalizedOcr!, action)
     setAnalysis(analysis)
+    setRagRecommendation(undefined)
     setBanner(action === 'lighten' ? '宿題セットを軽く調整しました。' : '提案を再生成しました。')
     setBusyAction(undefined)
   }
@@ -61,7 +90,7 @@ export function AnalysisPage() {
   return (
     <div className="page-grid">
       <div className="page-grid detail-layout">
-        <SectionCard title="読み取りと判定" subtitle="画像と各問題の判定根拠を並べて確認します。">
+        <SectionCard title="読み取りと判定">
           <div className="analysis-hero">
             <div className="image-stage">
               {session.previewUrl ? <img className="sheet-preview" src={session.previewUrl} alt="uploaded worksheet" /> : <div className="empty-state">画像プレビューはアップロード後に表示されます。</div>}
@@ -182,19 +211,21 @@ export function AnalysisPage() {
             <button className="secondary-btn" disabled={!!busyAction} onClick={() => rerun('lighten')}>
               {busyAction === 'lighten' ? '調整中...' : '軽くする'}
             </button>
-            <button className="primary-btn" onClick={() => navigate('/homework-review')}>宿題承認へ</button>
+            <button className="primary-btn" onClick={() => navigate('/students')}>生徒詳細で宿題提案へ</button>
           </div>
         </SectionCard>
-        <SectionCard title="提案問題" subtitle="候補の問題番号と選定理由を確認します。">
+        <SectionCard title="提案問題">
           <div className="pill-row">
             <span className={`load-pill ${session.analysis.homework_load_fit}`}>{session.analysis.homework_load_fit}</span>
           </div>
+          {ragBusy ? <div className="banner compact">生徒文脈込みの宿題提案を更新しています...</div> : null}
           <div className="recommendation-list compact-list">
-            {session.analysis.recommended_homework.map((item) => (
-              <div key={item.problem_no} className="recommendation-card">
-                <strong>{item.problem_no}</strong>
+            {(session.ragRecommendation?.recommended_problem_groups ?? session.analysis.recommended_homework).map((item: Recommendation | RecommendedProblemGroup) => (
+              <div key={'group_id' in item ? item.group_id : item.problem_no} className="recommendation-card">
+                <strong>{'group_id' in item ? item.group_id : item.problem_no}</strong>
                 <span>{item.difficulty}</span>
                 <p>{item.reason}</p>
+                {'level_fit_comment' in item ? <small>{item.level_fit_comment}</small> : null}
               </div>
             ))}
           </div>
