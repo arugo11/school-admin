@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>ct-exhibit-main 確認テスト</title>
+    <link rel="stylesheet" href="file:///home/argo/school-admin/node_modules/katex/dist/katex.min.css" />
+    <script defer src="file:///home/argo/school-admin/node_modules/katex/dist/katex.min.js"></script>
+    <script defer src="file:///home/argo/school-admin/node_modules/katex/dist/contrib/auto-render.min.js"></script>
+    <style>
+      @page { size: A4; margin: 10mm; }
+      :root {
+        color: #1d2730;
+        font-family: 'Source Han Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      body {
+        margin: 0;
+        background: #f8f2e9;
+      }
+      .page {
+        page-break-after: always;
+        min-height: 276mm;
+        display: flex;
+        flex-direction: column;
+      }
+      .page:last-child { page-break-after: auto; }
+      .paper {
+        min-height: 100%;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,245,236,0.96)),
+          repeating-linear-gradient(180deg, rgba(183, 164, 136, 0.08), rgba(183, 164, 136, 0.08) 1px, transparent 1px, transparent 28px);
+        border: 1px solid #d7c6af;
+        border-radius: 18px;
+        padding: 8mm;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        gap: 8mm;
+        align-items: flex-start;
+        padding-bottom: 5mm;
+        border-bottom: 2px solid #2a3a46;
+        margin-bottom: 5mm;
+      }
+      .header h1 {
+        margin: 0 0 2mm;
+        font-family: 'BIZ UDPMincho', 'Hiragino Mincho ProN', serif;
+        font-size: 24px;
+        letter-spacing: 0.02em;
+      }
+      .header p, .meta p {
+        margin: 0;
+      }
+      .meta {
+        text-align: right;
+        font-size: 10px;
+        color: #58656f;
+      }
+      .meta p + p {
+        margin-top: 1.5mm;
+      }
+      .exam-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4mm;
+        margin-bottom: 5mm;
+      }
+      .field {
+        border: 1px solid #a9b5bf;
+        border-radius: 10px;
+        min-height: 14mm;
+        padding: 2.5mm 3mm;
+        background: rgba(255,255,255,0.72);
+      }
+      .field-label {
+        font-size: 9px;
+        color: #6b7782;
+      }
+      .question-card {
+        border: 1px solid #c6d0d8;
+        border-radius: 14px;
+        padding: 4mm;
+        margin-bottom: 4mm;
+        background: rgba(255,255,255,0.84);
+        break-inside: avoid;
+      }
+      .question-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 3mm;
+        align-items: center;
+        margin-bottom: 2mm;
+      }
+      .question-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 15mm;
+        height: 15mm;
+        border-radius: 999px;
+        background: #203543;
+        color: #fff8ec;
+        font-weight: 800;
+      }
+      .subject-pill {
+        font-size: 10px;
+        border-radius: 999px;
+        padding: 1.5mm 3mm;
+        background: #e8eef2;
+      }
+      .problem-text { font-size: 13px; }
+      .problem-text p { margin: 0; }
+      .guide {
+        margin-top: auto;
+        padding-top: 4mm;
+        border-top: 1px dashed #aeb8bf;
+        font-size: 10px;
+        color: #5b6874;
+      }
+
+      .answer-sheet .question-card {
+        padding: 0;
+        overflow: hidden;
+      }
+      .answer-sheet-grid {
+        display: grid;
+        grid-template-columns: 16mm 1fr 44mm;
+        min-height: 34mm;
+      }
+      .answer-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 15px;
+        background: #203543;
+        color: #fff8ec;
+      }
+      .work-zone, .final-zone {
+        position: relative;
+        padding: 3mm 3.5mm;
+      }
+      .work-zone {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.9), rgba(248,244,237,0.95)),
+          repeating-linear-gradient(180deg, transparent, transparent 8mm, rgba(112, 128, 142, 0.18) 8mm, rgba(112, 128, 142, 0.18) 8.25mm);
+        border-right: 1px solid #cad3da;
+      }
+      .final-zone {
+        background: linear-gradient(180deg, #fffef9, #fff7e8);
+        border-left: 2px solid #213a4b;
+      }
+      .zone-label {
+        display: inline-block;
+        margin-bottom: 2mm;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #6d7880;
+      }
+      .zone-box {
+        min-height: 20mm;
+        padding: 1mm 0;
+        font-size: 13px;
+        white-space: pre-wrap;
+      }
+      .final-zone .zone-box {
+        min-height: 22mm;
+        border: 2px solid #203543;
+        border-radius: 10px;
+        padding: 3mm;
+        background: rgba(255,255,255,0.94);
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .prefilled {
+        color: #1c2430;
+      }
+      .answer-help {
+        display: flex;
+        justify-content: space-between;
+        gap: 3mm;
+        padding: 1.8mm 3mm 2.5mm;
+        font-size: 9px;
+        color: #687580;
+        background: rgba(245,247,248,0.9);
+        border-top: 1px solid #d8dfe4;
+      }
+      .footer-note {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 4mm;
+        padding-top: 4mm;
+        border-top: 1px dashed #aeb8bf;
+        font-size: 10px;
+        color: #596671;
+      }
+      .katex-display { margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+
+    <section class="page answer-sheet">
+      <div class="paper">
+        <header class="header">
+          <div>
+            <h1>解答用紙</h1>
+            <p>1枚だけ撮影します。左に計算過程、右の濃い枠に最終解答を書いてください。</p>
+          </div>
+          <div class="meta">
+            <p>test_id: ct-exhibit-main</p>
+            <p>Page 1 / 1</p>
+            <p>OCR: 最終解答欄を優先して読み取ります</p>
+          </div>
+        </header>
+        <div class="exam-info">
+          <div class="field"><div class="field-label">名前</div></div>
+          <div class="field"><div class="field-label">学年</div></div>
+          <div class="field"><div class="field-label">メモ</div></div>
+        </div>
+        <article class="question-card">
+          <div class="answer-sheet-grid">
+            <div class="answer-label">Q1</div>
+            <div class="work-zone">
+              <div class="zone-label">計算過程</div>
+              <div class="zone-box prefilled">途中 2</div>
+            </div>
+            <div class="final-zone">
+              <div class="zone-label">最終解答</div>
+              <div class="zone-box prefilled">2</div>
+            </div>
+          </div>
+          <div class="answer-help">
+            <span>CT-EXHIBIT-MAIN-Q01 / 比例反比例</span>
+            <span>OCR target: final_answer</span>
+          </div>
+        </article>
+        <article class="question-card">
+          <div class="answer-sheet-grid">
+            <div class="answer-label">Q2</div>
+            <div class="work-zone">
+              <div class="zone-label">計算過程</div>
+              <div class="zone-box prefilled">途中 2</div>
+            </div>
+            <div class="final-zone">
+              <div class="zone-label">最終解答</div>
+              <div class="zone-box prefilled">2</div>
+            </div>
+          </div>
+          <div class="answer-help">
+            <span>CT-EXHIBIT-MAIN-Q02 / 二次関数</span>
+            <span>OCR target: final_answer</span>
+          </div>
+        </article>
+        <article class="question-card">
+          <div class="answer-sheet-grid">
+            <div class="answer-label">Q3</div>
+            <div class="work-zone">
+              <div class="zone-label">計算過程</div>
+              <div class="zone-box prefilled">途中 \frac{\sqrt{2}}{2}</div>
+            </div>
+            <div class="final-zone">
+              <div class="zone-label">最終解答</div>
+              <div class="zone-box prefilled">\frac{\sqrt{2}}{2}</div>
+            </div>
+          </div>
+          <div class="answer-help">
+            <span>CT-EXHIBIT-MAIN-Q03 / 三角関数</span>
+            <span>OCR target: final_answer</span>
+          </div>
+        </article>
+        <article class="question-card">
+          <div class="answer-sheet-grid">
+            <div class="answer-label">Q4</div>
+            <div class="work-zone">
+              <div class="zone-label">計算過程</div>
+              <div class="zone-box prefilled">途中 91</div>
+            </div>
+            <div class="final-zone">
+              <div class="zone-label">最終解答</div>
+              <div class="zone-box"></div>
+            </div>
+          </div>
+          <div class="answer-help">
+            <span>CT-EXHIBIT-MAIN-Q04 / 数列</span>
+            <span>OCR target: final_answer</span>
+          </div>
+        </article>
+        <article class="question-card">
+          <div class="answer-sheet-grid">
+            <div class="answer-label">Q5</div>
+            <div class="work-zone">
+              <div class="zone-label">計算過程</div>
+              <div class="zone-box prefilled">途中 \frac{1}{8}</div>
+            </div>
+            <div class="final-zone">
+              <div class="zone-label">最終解答</div>
+              <div class="zone-box"></div>
+            </div>
+          </div>
+          <div class="answer-help">
+            <span>CT-EXHIBIT-MAIN-Q05 / 数と式</span>
+            <span>OCR target: final_answer</span>
+          </div>
+        </article>
+        <article class="question-card">
+          <div class="answer-sheet-grid">
+            <div class="answer-label">Q6</div>
+            <div class="work-zone">
+              <div class="zone-label">計算過程</div>
+              <div class="zone-box prefilled">途中 -1</div>
+            </div>
+            <div class="final-zone">
+              <div class="zone-label">最終解答</div>
+              <div class="zone-box"></div>
+            </div>
+          </div>
+          <div class="answer-help">
+            <span>CT-EXHIBIT-MAIN-Q06 / 積分</span>
+            <span>OCR target: final_answer</span>
+          </div>
+        </article>
+        <div class="footer-note">
+          <span>test_id: ct-exhibit-main</span>
+          <span>manifest から正答と出典へ戻れます</span>
+        </div>
+      </div>
+    </section>
+    <script>
+      window.__renderDone = false;
+      document.addEventListener('DOMContentLoaded', () => {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+        window.__renderDone = true;
+      });
+    </script>
+  </body>
+</html>

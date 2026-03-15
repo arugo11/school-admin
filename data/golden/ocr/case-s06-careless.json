@@ -1,0 +1,49 @@
+{
+  "student_id": "s-06",
+  "source_image_id": "case-s06-careless-img",
+  "page_type": "worksheet",
+  "ocr_confidence_summary": {
+    "low_confidence_count": 1,
+    "notes": [
+      "Q3: low-confidence, ambiguous-character"
+    ]
+  },
+  "items": [
+    {
+      "problem_no": "Q1",
+      "recognized_answer": "18 ○",
+      "teacher_marks": [
+        "circle"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "",
+      "raw_text": "Q1 18 ○",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q2",
+      "recognized_answer": "42 ×",
+      "teacher_marks": [
+        "cross"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "teacher likely marked incorrect",
+      "raw_text": "Q2 42 ×",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q3",
+      "recognized_answer": "15? △",
+      "teacher_marks": [
+        "triangle"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "teacher likely marked partial understanding; OCR confidence is low",
+      "raw_text": "Q3 15? △",
+      "uncertainty": [
+        "low-confidence",
+        "ambiguous-character"
+      ]
+    }
+  ]
+}

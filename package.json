@@ -1,0 +1,10 @@
+{
+  "name": "school-admin-tools",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "katex": "^0.16.22",
+    "playwright": "^1.52.0"
+  }
+}

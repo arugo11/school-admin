@@ -1,0 +1,152 @@
+{
+  "test_id": "ct-eval-same",
+  "source_alias": "qa-verify-10k-jp",
+  "source_dataset": "team-victory/qa_verify_10k_test",
+  "source_config": null,
+  "source_split": "train",
+  "seed": 111,
+  "filters": {
+    "count": 6,
+    "difficulty_min": 1,
+    "difficulty_max": 2,
+    "subject_include": [],
+    "subject_exclude": [],
+    "max_pages": 3,
+    "template": "default",
+    "shuffle": false
+  },
+  "selected_problems": [
+    {
+      "display_no": 1,
+      "problem_id": "1096",
+      "catalog_problem_no": "CT-EVAL-SAME-Q01",
+      "subject": "いろいろな式",
+      "level": 1,
+      "problem": "次の式を計算しなさい：\n\n\\[\n\\left(\\frac{1}{2}+\\frac{1}{3}\\right)\\times\\left(\\frac{1}{2}-\\frac{1}{3}\\right)\n\\]",
+      "answer": "\\frac{5}{36}",
+      "solution": "analysisWe need to compute (1/2 + 1/3)*(1/2 - 1/3). Compute inside: 1/2 + 1/3 = (3+2)/6 = 5/6. 1/2 - 1/3 = (3-2)/6 = 1/6. Multiply: (5/6)*(1/6) = 5/36. So answer is 5/36. Provide step-by-step reasoning, then final answer in \\boxed{5/36}. Ensure no \\displaystyle. Use latex. No units. Ok.assistantfinalまず、各括弧内を計算します。\n\n\\[\n\\frac12+\\frac13=\\frac{3}{6}+\\frac{2}{6}=\\frac{5}{6}\n\\]\n\n\\[\n\\frac12-\\frac13=\\frac{3}{6}-\\frac{2}{6}=\\frac{1}{6}\n\\]\n\n次に、得られた二つの分数を掛け合わせます。\n\n\\[\n\\left(\\frac{5}{6}\\right)\\times\\left(\\frac{1}{6}\\right)=\\frac{5\\times1}{6\\times6}=\\frac{5}{36}\n\\]\n\nしたがって、式の値は\n\n\\[\n\\boxed{\\frac{5}{36}}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "1096",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "いろいろな式",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 2,
+      "problem_id": "1627",
+      "catalog_problem_no": "CT-EVAL-SAME-Q02",
+      "subject": "連立方程式",
+      "level": 1,
+      "problem": "次の連立方程式を解き、\\(x\\) の値を求めなさい。\n\n\\[\n\\begin{cases}\n2x+3y=11\\\\\n4x-y=5\n\\end{cases}\n\\]",
+      "answer": "\\frac{13}{7}",
+      "solution": "analysisWe need to solve linear system. Solve quickly. From second: y = 4x -5. Plug into first: 2x + 3(4x-5) = 11 => 2x +12x -15 = 11 => 14x = 26 => x = 13/7. So answer boxed. Ensure no \\displaystyle. Use \\boxed{13/7}.assistantfinalまず、2つ目の式から \\(y\\) を求めます。\n\n\\[\n4x - y = 5 \\quad\\Longrightarrow\\quad y = 4x - 5\n\\]\n\nこれを1つ目の式に代入します。\n\n\\[\n2x + 3y = 11 \\quad\\Longrightarrow\\quad 2x + 3(4x - 5) = 11\n\\]\n\n展開して整理すると\n\n\\[\n2x + 12x - 15 = 11 \\quad\\Longrightarrow\\quad 14x = 26\n\\]\n\nよって\n\n\\[\nx = \\frac{26}{14} = \\frac{13}{7}\n\\]\n\n\\[\n\\boxed{\\frac{13}{7}}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "1627",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "連立方程式",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 3,
+      "problem_id": "3512",
+      "catalog_problem_no": "CT-EVAL-SAME-Q03",
+      "subject": "正負の数",
+      "level": 1,
+      "problem": "次の計算を行いなさい： $5-8+10$ の結果を求めよ。",
+      "answer": "7",
+      "solution": "analysisWe need to solve 5-8+10. Compute: 5-8 = -3, -3+10 = 7. So answer 7. Provide step-by-step reasoning, then final answer in \\boxed{7}. Ensure no \\displaystyle, no units. Use LaTeX. Ok.assistantfinalまず、式を左から順に計算します。\n\n1. \\(5-8\\) を計算すると  \n   \\[\n   5-8 = -3\n   \\]\n\n2. 次に、先ほど得た \\(-3\\) に \\(10\\) を足します。  \n   \\[\n   -3+10 = 7\n   \\]\n\n以上より、式 \\(5-8+10\\) の結果は \\(7\\) です。\n\n\\[\n\\boxed{7}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "3512",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "正負の数",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 4,
+      "problem_id": "1932",
+      "catalog_problem_no": "CT-EVAL-SAME-Q04",
+      "subject": "整数の性質（数学と人間活動）",
+      "level": 2,
+      "problem": "正整数 \\(n\\) が存在して \\(n^2+1\\) は 5 で割り切れるとき、その \\(n\\) の最小値を求めよ",
+      "answer": "2",
+      "solution": "analysisWe need to find smallest positive integer n such that n^2 + 1 divisible by 5. So n^2 ≡ -1 mod 5. Compute squares mod 5: 0^2=0,1^2=1,2^2=4,3^2=9≡4,4^2=16≡1. None equal to 4? Wait -1 mod5 is 4. So we need n^2 ≡4 mod5. That occurs for n≡2 or 3 mod5. Smallest positive integer n that satisfies is 2. Check: 2^2+1=5 divisible by5. So answer 2. Provide step-by-step reasoning. Use LaTeX. Ensure final answer in \\boxed{2}. No units. No \\displaystyle. Use normal LaTeX.assistantfinal\\(n^2+1\\) が 5 で割り切れるためには  \n\\[\nn^2+1\\equiv 0 \\pmod{5}\\quad\\Longrightarrow\\quad n^2\\equiv -1\\equiv 4 \\pmod{5}.\n\\]\n\n5 での平方の剰余を調べると\n\n\\[\n\\begin{aligned}\n0^2 &\\equiv 0 \\pmod{5},\\\\\n1^2 &\\equiv 1 \\pmod{5},\\\\\n2^2 &\\equiv 4 \\pmod{5},\\\\\n3^2 &\\equiv 9 \\equiv 4 \\pmod{5},\\\\\n4^2 &\\equiv 16 \\equiv 1 \\pmod{5}.\n\\end{aligned}\n\\]\n\nしたがって \\(n^2\\equiv 4 \\pmod{5}\\) となるのは  \n\\(n\\equiv 2\\) または \\(n\\equiv 3 \\pmod{5}\\) のときである。\n\n最小の正整数 \\(n\\) は \\(n=2\\) であり、  \n\\(2^2+1=5\\) は 5 で割り切れる。\n\n\\[\n\\boxed{2}\n\\]",
+      "estimated_minutes": 3,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "1932",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "整数の性質（数学と人間活動）",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 5,
+      "problem_id": "271",
+      "catalog_problem_no": "CT-EVAL-SAME-Q05",
+      "subject": "文字式",
+      "level": 1,
+      "problem": "次の方程式を解いて、\\(x\\) の値を求めなさい。 \\(3x+5=x+12\\)",
+      "answer": "\\frac{7}{2}",
+      "solution": "analysisWe need to solve 3x+5 = x+12. Solve: 3x - x = 12 - 5 => 2x = 7 => x = 7/2 = 3.5. Output final answer in boxed tag. No units. Use latex. No \\displaystyle. Just \\boxed{7/2}. Ensure no \\displaystyle. Use \\boxed{7/2}.assistantfinalまず、方程式 \\(3x+5=x+12\\) を整理します。  \n\n\\[\n3x+5=x+12\n\\]\n\n両辺から \\(x\\) を引くと\n\n\\[\n3x-x+5=12\n\\]\n\n\\[\n2x+5=12\n\\]\n\n次に両辺から \\(5\\) を引くと\n\n\\[\n2x=7\n\\]\n\n最後に両辺を \\(2\\) で割ると\n\n\\[\nx=\\frac{7}{2}\n\\]\n\nしたがって、求める \\(x\\) の値は\n\n\\[\n\\boxed{\\frac{7}{2}}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "271",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "文字式",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 6,
+      "problem_id": "1626",
+      "catalog_problem_no": "CT-EVAL-SAME-Q06",
+      "subject": "確率",
+      "level": 1,
+      "problem": "公平なサイコロを2回投げて，出た目の和が偶数になる確率 $P$ を求めよ。",
+      "answer": "\\frac12",
+      "solution": "analysisWe need to compute probability that sum of two fair dice is even. Each die has 6 faces 1-6. Sum even occurs when both are even or both odd. Count outcomes: 6^2=36 total. Even numbers: 2,4,6 (3). Odd numbers: 1,3,5 (3). So both even: 3*3=9. Both odd: 3*3=9. Total favorable 18. Probability = 18/36 = 1/2. So answer 1/2. Provide step-by-step reasoning. Then final answer in boxed. Use latex. No \\displaystyle. Just \\boxed{1/2}.assistantfinalまず、サイコロの出る目は 1,2,3,4,5,6 の 6 通りです。  \n2 回投げるので全ての組み合わせは  \n\n\\[\n6 \\times 6 = 36\n\\]\n\n通りあります。\n\n和が偶数になる条件は  \n- 両方の目が偶数である  \n- 両方の目が奇数である\n\nのいずれかです。\n\n- 偶数の目は 2,4,6 の 3 通り  \n- 奇数の目は 1,3,5 の 3 通り  \n\nしたがって\n\n\\[\n\\begin{aligned}\n\\text{偶数同士の組み合わせ} &= 3 \\times 3 = 9,\\\\\n\\text{奇数同士の組み合わせ} &= 3 \\times 3 = 9.\n\\end{aligned}\n\\]\n\nよって偶数和になる有利な組み合わせは\n\n\\[\n9 + 9 = 18\n\\]\n\n通りです。\n\n確率 \\(P\\) は\n\n\\[\nP = \\frac{\\text{有利な組み合わせ数}}{\\text{全組み合わせ数}}\n  = \\frac{18}{36}\n  = \\frac12 .\n\\]\n\n\\[\n\\boxed{\\frac12}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "1626",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "確率",
+        "tag_hints": []
+      }
+    }
+  ]
+}

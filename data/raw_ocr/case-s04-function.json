@@ -1,0 +1,8 @@
+{
+  "status": "succeeded",
+  "analyzeResult": {"readResults": [{"page": 1, "lines": [
+    {"text": "Q1 y=2x ○", "confidence": 0.96},
+    {"text": "Q2 x=3 のとき y=6 ○", "confidence": 0.92},
+    {"text": "Q3 変域 1<=x<=4 ?", "confidence": 0.61}
+  ]}]}
+}

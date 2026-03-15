@@ -1,0 +1,104 @@
+[
+  {
+    "mode": "live",
+    "runIndex": 1,
+    "status": "pass",
+    "total_ms": 3945,
+    "final_url": "http://127.0.0.1:4174/demo-dashboard",
+    "headline": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nLive Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n講師承認が完了しました。\nデモ完了\n\n講師が承認し、今夜の宿題が確定しました。\n\n生徒\nYuna Kobayashi\nモード\nlive\n承認問題数\n2\n確認テストID\nct-exhibit-main\nA-02\nC-01\n次の生徒を見る\n審査向けメッセージ\n\n教師を置き換えるのではなく、準備時間を圧縮します。\n\n現場価値: 授業前20分で6人分の個別宿題設計を助ける\n技術実装: 答案画像という現実入力を OCR と LLM に接続\nデモ体験: 撮るだけで宿題候補が出て、講師が最後に整える\n発展性: 将来は OCR と分析を edge 側に寄せられる",
+    "checkpoints": [
+      "students",
+      "student-detail",
+      "upload",
+      "ocr-review",
+      "analysis",
+      "homework-review",
+      "demo-dashboard"
+    ]
+  },
+  {
+    "mode": "live",
+    "runIndex": 2,
+    "status": "pass",
+    "total_ms": 3883,
+    "final_url": "http://127.0.0.1:4174/demo-dashboard",
+    "headline": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nLive Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n講師承認が完了しました。\nデモ完了\n\n講師が承認し、今夜の宿題が確定しました。\n\n生徒\nYuna Kobayashi\nモード\nlive\n承認問題数\n2\n確認テストID\nct-exhibit-main\nA-02\nC-01\n次の生徒を見る\n審査向けメッセージ\n\n教師を置き換えるのではなく、準備時間を圧縮します。\n\n現場価値: 授業前20分で6人分の個別宿題設計を助ける\n技術実装: 答案画像という現実入力を OCR と LLM に接続\nデモ体験: 撮るだけで宿題候補が出て、講師が最後に整える\n発展性: 将来は OCR と分析を edge 側に寄せられる",
+    "checkpoints": [
+      "students",
+      "student-detail",
+      "upload",
+      "ocr-review",
+      "analysis",
+      "homework-review",
+      "demo-dashboard"
+    ]
+  },
+  {
+    "mode": "live",
+    "runIndex": 3,
+    "status": "pass",
+    "total_ms": 4049,
+    "final_url": "http://127.0.0.1:4174/demo-dashboard",
+    "headline": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nLive Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n講師承認が完了しました。\nデモ完了\n\n講師が承認し、今夜の宿題が確定しました。\n\n生徒\nYuna Kobayashi\nモード\nlive\n承認問題数\n2\n確認テストID\nct-exhibit-main\nA-02\nC-01\n次の生徒を見る\n審査向けメッセージ\n\n教師を置き換えるのではなく、準備時間を圧縮します。\n\n現場価値: 授業前20分で6人分の個別宿題設計を助ける\n技術実装: 答案画像という現実入力を OCR と LLM に接続\nデモ体験: 撮るだけで宿題候補が出て、講師が最後に整える\n発展性: 将来は OCR と分析を edge 側に寄せられる",
+    "checkpoints": [
+      "students",
+      "student-detail",
+      "upload",
+      "ocr-review",
+      "analysis",
+      "homework-review",
+      "demo-dashboard"
+    ]
+  },
+  {
+    "mode": "replay",
+    "runIndex": 1,
+    "status": "pass",
+    "total_ms": 883,
+    "final_url": "http://127.0.0.1:4174/demo-dashboard",
+    "headline": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nReplay Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n講師承認が完了しました。\nデモ完了\n\n講師が承認し、今夜の宿題が確定しました。\n\n生徒\nYuna Kobayashi\nモード\nreplay\n承認問題数\n2\n確認テストID\n通常ワークシート\nA-02\nA-07\n次の生徒を見る\n審査向けメッセージ\n\n教師を置き換えるのではなく、準備時間を圧縮します。\n\n現場価値: 授業前20分で6人分の個別宿題設計を助ける\n技術実装: 答案画像という現実入力を OCR と LLM に接続\nデモ体験: 撮るだけで宿題候補が出て、講師が最後に整える\n発展性: 将来は OCR と分析を edge 側に寄せられる",
+    "checkpoints": [
+      "students",
+      "student-detail",
+      "upload",
+      "ocr-review",
+      "analysis",
+      "homework-review",
+      "demo-dashboard"
+    ]
+  },
+  {
+    "mode": "replay",
+    "runIndex": 2,
+    "status": "pass",
+    "total_ms": 866,
+    "final_url": "http://127.0.0.1:4174/demo-dashboard",
+    "headline": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nReplay Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n講師承認が完了しました。\nデモ完了\n\n講師が承認し、今夜の宿題が確定しました。\n\n生徒\nYuna Kobayashi\nモード\nreplay\n承認問題数\n2\n確認テストID\n通常ワークシート\nA-02\nA-07\n次の生徒を見る\n審査向けメッセージ\n\n教師を置き換えるのではなく、準備時間を圧縮します。\n\n現場価値: 授業前20分で6人分の個別宿題設計を助ける\n技術実装: 答案画像という現実入力を OCR と LLM に接続\nデモ体験: 撮るだけで宿題候補が出て、講師が最後に整える\n発展性: 将来は OCR と分析を edge 側に寄せられる",
+    "checkpoints": [
+      "students",
+      "student-detail",
+      "upload",
+      "ocr-review",
+      "analysis",
+      "homework-review",
+      "demo-dashboard"
+    ]
+  },
+  {
+    "mode": "replay",
+    "runIndex": 3,
+    "status": "pass",
+    "total_ms": 850,
+    "final_url": "http://127.0.0.1:4174/demo-dashboard",
+    "headline": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nReplay Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n講師承認が完了しました。\nデモ完了\n\n講師が承認し、今夜の宿題が確定しました。\n\n生徒\nYuna Kobayashi\nモード\nreplay\n承認問題数\n2\n確認テストID\n通常ワークシート\nA-02\nA-07\n次の生徒を見る\n審査向けメッセージ\n\n教師を置き換えるのではなく、準備時間を圧縮します。\n\n現場価値: 授業前20分で6人分の個別宿題設計を助ける\n技術実装: 答案画像という現実入力を OCR と LLM に接続\nデモ体験: 撮るだけで宿題候補が出て、講師が最後に整える\n発展性: 将来は OCR と分析を edge 側に寄せられる",
+    "checkpoints": [
+      "students",
+      "student-detail",
+      "upload",
+      "ocr-review",
+      "analysis",
+      "homework-review",
+      "demo-dashboard"
+    ]
+  }
+]

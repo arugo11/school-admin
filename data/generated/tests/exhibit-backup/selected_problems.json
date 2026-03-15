@@ -1,0 +1,152 @@
+{
+  "test_id": "ct-exhibit-backup",
+  "source_alias": "qa-verify-10k-jp",
+  "source_dataset": "team-victory/qa_verify_10k_test",
+  "source_config": null,
+  "source_split": "train",
+  "seed": 202,
+  "filters": {
+    "count": 6,
+    "difficulty_min": 1,
+    "difficulty_max": 2,
+    "subject_include": [],
+    "subject_exclude": [],
+    "max_pages": 3,
+    "template": "default",
+    "shuffle": false
+  },
+  "selected_problems": [
+    {
+      "display_no": 1,
+      "problem_id": "1673",
+      "catalog_problem_no": "CT-EXHIBIT-BACKUP-Q01",
+      "subject": "平面上の曲線と複素数平面",
+      "level": 2,
+      "problem": "次の問いに答えよ。複素数 \\(z\\) が \\(|z+2i|=3\\) という円上にあり、さらに \\(\\Re z=1\\) という直線上にもあるとき、そんな \\(z\\) は存在するか。存在する場合は \\(z\\) の個数を答えよ。",
+      "answer": "2",
+      "solution": "analysisWe need to find intersection of circle centered at -2i? Wait |z+2i|=3: center at -2i? Actually z+2i = z - (-2i). So center at -2i (0,-2). radius 3. Also line Re z = 1: vertical line x=1. Intersection of circle with vertical line. Solve: z = 1 + yi. Then |(1+yi)+2i| = |1 + i(y+2)| = sqrt(1^2 + (y+2)^2) = 3. So 1 + (y+2)^2 = 9 => (y+2)^2 = 8 => y+2 = ± sqrt(8) = ± 2√2. So y = -2 ± 2√2. So two solutions. So yes, exists, number 2. Provide answer: \\boxed{2}. Ensure no units. Use latex. Provide step-by-step.assistantfinalまず、条件を式に直す。\n\n1. 円 \\(|z+2i|=3\\)  \n   \\[\n   z+2i = z-(-2i)\\quad\\Longrightarrow\\quad \\text{中心 }(-2i),\\; \\text{半径 }3\n   \\]\n\n2. 直線 \\(\\Re z = 1\\)  \n   \\[\n   z = 1+yi \\qquad (y\\in\\mathbb{R})\n   \\]\n\n---\n\n### 円と直線の交点を求める\n\n直線上の点 \\(z=1+yi\\) を円の方程式に代入する。\n\n\\[\n|z+2i| = |(1+yi)+2i| = |1 + i(y+2)|\n\\]\n\n複素数の絶対値は実部と虚部の二乗和の平方根なので\n\n\\[\n|1 + i(y+2)| = \\sqrt{1^2 + (y+2)^2}\n\\]\n\n円の半径は 3 であるから\n\n\\[\n\\sqrt{1 + (y+2)^2} = 3\n\\]\n\n両辺を二乗して\n\n\\[\n1 + (y+2)^2 = 9 \\quad\\Longrightarrow\\quad (y+2)^2 = 8\n\\]\n\nよって\n\n\\[\ny+2 = \\pm \\sqrt{8} = \\pm 2\\sqrt{2}\n\\]\n\n\\[\ny = -2 \\pm 2\\sqrt{2}\n\\]\n\n---\n\n### 結果\n\n\\(y\\) に対して 2 つの実数解が得られた。  \nしたがって、条件を満たす複素数 \\(z\\) は 2 つ存在する。\n\n\\[\n\\boxed{2}\n\\]",
+      "estimated_minutes": 3,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "1673",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "平面上の曲線と複素数平面",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 2,
+      "problem_id": "6232",
+      "catalog_problem_no": "CT-EXHIBIT-BACKUP-Q02",
+      "subject": "微分",
+      "level": 1,
+      "problem": "次の関数  \n\\( f(x)=x^{2}\\sin x \\)  \nの微分係数 \\(f'(0)\\) を求めよ。",
+      "answer": "0",
+      "solution": "analysisWe need derivative at 0. f(x)=x^2 sin x. f'(x)=2x sin x + x^2 cos x. Evaluate at 0: 2*0*sin0 + 0^2*cos0 = 0. But careful: derivative at 0 defined as limit of difference quotient. But function is differentiable everywhere because product of differentiable functions. So f'(0)=0. Provide step-by-step. Use limit definition maybe. Provide final answer boxed. Ensure no \\displaystyle. Use latex. No units. Ok.assistantfinalまず、\\(f(x)=x^{2}\\sin x\\) の導関数を求める。  \n積の微分法則 \\((uv)'=u'v+uv'\\) を用いると\n\n\\[\nf'(x)=\\frac{d}{dx}\\bigl(x^{2}\\bigr)\\sin x+x^{2}\\frac{d}{dx}\\bigl(\\sin x\\bigr)\n      =2x\\sin x+x^{2}\\cos x .\n\\]\n\n次に \\(x=0\\) での値を計算する。\n\n\\[\nf'(0)=2\\cdot0\\cdot\\sin 0+0^{2}\\cos 0=0+0=0 .\n\\]\n\nしたがって、\\(f'(0)=\\boxed{0}\\)。",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "6232",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "微分",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 3,
+      "problem_id": "7026",
+      "catalog_problem_no": "CT-EXHIBIT-BACKUP-Q03",
+      "subject": "確率",
+      "level": 1,
+      "problem": "サイコロを1回振って、出た目が3である確率 $p$ を求めよ。",
+      "answer": "\\frac{1}{6}",
+      "solution": "analysisWe need to solve: \"サイコロを1回振って、出た目が3である確率 p を求めよ。\" It's a standard die, presumably fair six-sided die. Probability of rolling a 3 is 1/6. So answer: 1/6. Provide step-by-step reasoning. Then final answer in \\boxed{1/6}. Ensure no \\displaystyle. Use latex. No units. Ok.assistantfinalまず、サイコロは6面があり、各面が出る確率は等しいと仮定します。  \n1回振ったときに「3」が出る事象は、6つのうち1つだけです。  \nしたがって、確率 \\(p\\) は\n\n\\[\np=\\frac{\\text{「3」が出る場合の数}}{\\text{全ての可能な場合の数}}\n  =\\frac{1}{6}.\n\\]\n\n\\[\n\\boxed{\\frac{1}{6}}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "7026",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "確率",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 4,
+      "problem_id": "7301",
+      "catalog_problem_no": "CT-EXHIBIT-BACKUP-Q04",
+      "subject": "平方根",
+      "level": 1,
+      "problem": "次の数式の値を求めなさい。$ \\sqrt{49} $",
+      "answer": "7",
+      "solution": "analysisWe need to solve sqrt(49). The answer is 7. Provide step-by-step reasoning, then final answer in \\boxed{7}. Ensure no \\displaystyle, no units. Use LaTeX. Provide explanation.assistantfinalまず、平方根の定義を思い出します。  \n\\[\n\\sqrt{a}\\quad\\text{は}\\quad a\\ge 0\\ \\text{のとき、}\\ x^2=a\\ \\text{を満たす非負の数 }x\\text{です。}\n\\]\n\nここでは \\(a=49\\) です。  \n\\(7^2 = 49\\) であることは明らかですし、\\(7\\) は非負です。  \nしたがって\n\n\\[\n\\sqrt{49}=7.\n\\]\n\n\\[\n\\boxed{7}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "7301",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "平方根",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 5,
+      "problem_id": "6245",
+      "catalog_problem_no": "CT-EXHIBIT-BACKUP-Q05",
+      "subject": "二次方程式",
+      "level": 2,
+      "problem": "方程式 \\(x^2-3x-4=0\\) のうち、\\(x>0\\) の解を求めよ。",
+      "answer": "4",
+      "solution": "analysisWe need to solve quadratic x^2 - 3x - 4 = 0. Factor: (x-4)(x+1)=0. Solutions: x=4, x=-1. Positive solution: x=4. Provide step-by-step reasoning, final answer in \\boxed{4}. Ensure no \\displaystyle. Use latex. No units. Ok.assistantfinalまず、方程式  \n\\[\nx^2-3x-4=0\n\\]\nを因数分解します。\n\n\\[\nx^2-3x-4=(x-4)(x+1)=0\n\\]\n\n因数分解した結果、  \n\\[\nx-4=0 \\quad \\text{または} \\quad x+1=0\n\\]\nとなり、解は  \n\\[\nx=4 \\quad \\text{または} \\quad x=-1\n\\]\n\n問題は \\(x>0\\) の解を求めることなので、正の解は  \n\\[\nx=4\n\\]\n\n\\[\n\\boxed{4}\n\\]",
+      "estimated_minutes": 3,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "6245",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "二次方程式",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 6,
+      "problem_id": "1893",
+      "catalog_problem_no": "CT-EXHIBIT-BACKUP-Q06",
+      "subject": "比例反比例",
+      "level": 1,
+      "problem": "A と B が比例関係にあるものとする。すなわち \\(B = kA\\)。 このとき、\\(A = 6\\) のとき \\(B = 9\\)。 さらに \\(A = 10\\) のとき \\(B\\) は何か。",
+      "answer": "15",
+      "solution": "analysisWe need to solve: A and B proportional: B = kA. Given A=6, B=9. Find k = B/A = 9/6 = 3/2 = 1.5. Then for A=10, B = kA = (3/2)*10 = 15. So answer 15. Provide step-by-step reasoning, final answer in boxed tag. No units. No \\displaystyle. Use LaTeX. Let's produce.assistantfinalまず比例関係 \\(B = kA\\) から比例定数 \\(k\\) を求めます。  \n与えられた条件 \\(A = 6\\) のとき \\(B = 9\\) なので\n\n\\[\nk = \\frac{B}{A} = \\frac{9}{6} = \\frac{3}{2}.\n\\]\n\n次に \\(A = 10\\) のときの \\(B\\) を計算します。  \n比例式に \\(k = \\frac{3}{2}\\) と \\(A = 10\\) を代入すると\n\n\\[\nB = kA = \\frac{3}{2}\\times 10 = 15.\n\\]\n\nしたがって、\\(A = 10\\) のときの \\(B\\) は\n\n\\[\n\\boxed{15}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "1893",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "比例反比例",
+        "tag_hints": []
+      }
+    }
+  ]
+}

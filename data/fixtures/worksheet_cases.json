@@ -1,0 +1,37 @@
+[
+  {
+    "fixture_id": "case-s03-signs",
+    "student_id": "s-03",
+    "title": "努力型だが符号ミスが続く答案",
+    "intent": ["符号処理", "分配法則", "解き直し不足"],
+    "image_path": "frontend/public/demo-fixtures/s03-signs.svg"
+  },
+  {
+    "fixture_id": "case-s02-steps",
+    "student_id": "s-02",
+    "title": "途中式不足の答案",
+    "intent": ["途中式不足", "移項"],
+    "image_path": "frontend/public/demo-fixtures/s02-steps.svg"
+  },
+  {
+    "fixture_id": "case-s05-fractions",
+    "student_id": "s-05",
+    "title": "基礎不足の分数答案",
+    "intent": ["約分", "分数"],
+    "image_path": "frontend/public/demo-fixtures/s05-fractions.svg"
+  },
+  {
+    "fixture_id": "case-s06-careless",
+    "student_id": "s-06",
+    "title": "ケアレスミス中心の答案",
+    "intent": ["検算", "写し間違い"],
+    "image_path": "frontend/public/demo-fixtures/s06-careless.svg"
+  },
+  {
+    "fixture_id": "case-s04-function",
+    "student_id": "s-04",
+    "title": "高得点だが一部偏りのある答案",
+    "intent": ["関数", "読解"],
+    "image_path": "frontend/public/demo-fixtures/s04-function.svg"
+  }
+]

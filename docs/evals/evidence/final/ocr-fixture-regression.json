@@ -1,0 +1,48 @@
+[
+  {
+    "name": "sample-correct",
+    "recognized": {
+      "Q1": "2",
+      "Q2": "\\cot x",
+      "Q3": "6",
+      "Q4": "-2 + 7i",
+      "Q5": "4",
+      "Q6": "40_9"
+    },
+    "unknown_count": 0,
+    "unknown_problem_nos": [],
+    "test_id": "ct-exhibit-main"
+  },
+  {
+    "name": "sample-mixed",
+    "recognized": {
+      "Q1": "2",
+      "Q2": "0",
+      "Q3": "6",
+      "Q4": "0",
+      "Q5": "4",
+      "Q6": "0"
+    },
+    "unknown_count": 0,
+    "unknown_problem_nos": [],
+    "test_id": "ct-exhibit-main"
+  },
+  {
+    "name": "sample-partial",
+    "recognized": {
+      "Q1": "2",
+      "Q2": "\\cot x",
+      "Q3": "6",
+      "Q4": "unknown",
+      "Q5": "unknown",
+      "Q6": "unknown"
+    },
+    "unknown_count": 3,
+    "unknown_problem_nos": [
+      "Q4",
+      "Q5",
+      "Q6"
+    ],
+    "test_id": "ct-exhibit-main"
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "s01Single": {
+    "detailText": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nReplay Mode\nAoi Tanaka\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\nAoi Tanaka\n\n中1 / standard\n\n基礎は安定しているが見直しを急ぎがち。\n\n最近の点数\n78 / 81 / 80\n宿題のコツ\n量は普通でよい。確認問題を先に解くと安定する。\n見直し不足\n符号の見落とし\nデモ開始\n\nLive と Replay をその場で切り替えられます。\n\nLive で開始\nReplay で開始",
+    "analysisText": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nLive Mode\nAoi Tanaka\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\nOCR review を反映して分析を更新しました。\n弱点分析\n\n断定しすぎず、講師がすぐ使える粒度で返します。\n\nconfirmation test: ct-exhibit-main\n符号の見落とし\n見直し不足\n誤答パターン\n符号処理の誤り\n計算ミス\n宿題負荷\n\nappropriate\n\n見直しを意識させるために、見直しチェックの問題を含めました。符号処理に特に注意を払うように指導してください。\n\n基礎は安定しているが、見直しを急ぎがちであるため、見直しを促す問題が必要。\n最近の確認テストで全問不正解であり、基礎的な理解を深める必要がある。\n再提案\n軽くする\n宿題承認へ\n提案問題\n\n教材 DB に存在する問題番号だけを表示します。\n\nA-01basic\n\n移項の基礎を確認するため\n\nA-02basic\n\n符号の扱いを強化するため\n\nA-06standard\n\n符号処理の理解を深めるため\n\nA-07basic\n\n見直しの重要性を再確認するため",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  "s03Multi": {
+    "ocrText": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nLive Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n2枚のアップロードと OCR が完了しました。\nOCR review\n\n低信頼箇所だけ素早く確認して分析へ進みます。\n\n確認テストID: ct-exhibit-main / manifest linked\n要確認 0件\nQ1\nmark unclear\n回答候補\n\nQ1\n\nQ2\nmark unclear\n回答候補\n\nQ2\n\nQ3\nmark unclear\n回答候補\n\nQ3\n\nQ4\nmark unclear\n回答候補\n\nQ4\n\nQ5\nmark unclear\n回答候補\n\nQ5\n\nQ6\nmark unclear\n回答候補\n\nQ6\n\nQ1\nmark unclear\n回答候補\n\nQ1\n\nQ2\nmark unclear\n回答候補\n\nQ2\n\nQ3\nmark unclear\n回答候補\n\nQ3\n\nQ4\nmark unclear\n回答候補\n\nQ4\n\nQ5\nmark unclear\n回答候補\n\nQ5\n\nQ6\nmark unclear\n回答候補\n\nQ6\n\nこのまま分析へ",
+    "analysisText": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nLive Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\nOCR review を反映して分析を更新しました。\n弱点分析\n\n断定しすぎず、講師がすぐ使える粒度で返します。\n\nconfirmation test: ct-exhibit-main\n整数・四則計算\n関数・座標\n誤答パターン\n確認テストで 6 問の誤答または未記入があった\n宿題負荷\n\nappropriate\n\nライブ分析が不安定な場合でも、このセットなら講師がその場で説明しやすい。\n\nOCRから 0 件の要確認箇所が見つかった\nYuna Kobayashi には 3 問の短い復習セットを優先した\n確認テスト ct-exhibit-main の 0 問を照合し, 6 問でつまずきが見えた\n要復習問題: CT-EXHIBIT-MAIN-Q01, CT-EXHIBIT-MAIN-Q02, CT-EXHIBIT-MAIN-Q03\n再提案\n軽くする\n宿題承認へ\n提案問題\n\n教材 DB に存在する問題番号だけを表示します。\n\nC-01standard\n\n関数の比例を短く復習する\n\nA-07basic\n\n計算のくふうの見直しチェックを短く復習する\n\nA-02basic\n\n一次方程式の移項と整理を短く復習する",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  }
+}

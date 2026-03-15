@@ -1,0 +1,16 @@
+{
+  "status": "succeeded",
+  "analyzeResult": {
+    "readResults": [
+      {
+        "page": 1,
+        "lines": [
+          {"text": "Q1 x=4 ○", "confidence": 0.96},
+          {"text": "Q2 2(x-1)=4 x=-3 △", "confidence": 0.62},
+          {"text": "Q3 x=5 ×", "confidence": 0.94},
+          {"text": "Q4 x=2 -> x=2", "confidence": 0.58}
+        ]
+      }
+    ]
+  }
+}

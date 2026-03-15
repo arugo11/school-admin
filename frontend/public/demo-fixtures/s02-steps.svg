@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <rect width="900" height="1200" fill="#eef3f8"/>
+  <rect x="60" y="60" width="780" height="1080" rx="24" fill="#ffffff" stroke="#c7d4df" stroke-width="4"/>
+  <text x="100" y="150" font-size="40" font-family="Georgia, serif" fill="#16324f">Haruto / 方程式</text>
+  <text x="110" y="260" font-size="34" font-family="Courier New, monospace" fill="#222">Q1   x = 7   ○</text>
+  <text x="110" y="350" font-size="34" font-family="Courier New, monospace" fill="#222">Q2   x = 9   ×</text>
+  <text x="110" y="440" font-size="34" font-family="Courier New, monospace" fill="#222">Q3   3x = 12  x = 4   △</text>
+</svg>

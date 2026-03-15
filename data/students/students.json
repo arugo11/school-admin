@@ -1,0 +1,80 @@
+[
+  {
+    "student_id": "s-01",
+    "display_name": "Aoi Tanaka",
+    "grade": "中1",
+    "target_level": "standard",
+    "persona_summary": "基礎は安定しているが見直しを急ぎがち。",
+    "recent_scores": [78, 81, 80],
+    "homework_style_notes": "量は普通でよい。確認問題を先に解くと安定する。",
+    "weakness_history": ["見直し不足", "符号の見落とし"],
+    "preferred_difficulty": "standard",
+    "attention_level": "medium",
+    "spotlight": false
+  },
+  {
+    "student_id": "s-02",
+    "display_name": "Haruto Sato",
+    "grade": "中2",
+    "target_level": "basic",
+    "persona_summary": "途中式を飛ばしやすく、基礎の反復で伸びるタイプ。",
+    "recent_scores": [52, 55, 58],
+    "homework_style_notes": "短く区切った宿題だと継続できる。",
+    "weakness_history": ["途中式不足", "方程式の移項"],
+    "preferred_difficulty": "basic",
+    "attention_level": "high",
+    "spotlight": false
+  },
+  {
+    "student_id": "s-03",
+    "display_name": "Yuna Kobayashi",
+    "grade": "中2",
+    "target_level": "standard",
+    "persona_summary": "よく頑張るが、丸付け後の解き直しが浅く、惜しい符号ミスで点が伸び切らない。",
+    "recent_scores": [61, 64, 63],
+    "homework_style_notes": "重すぎる宿題だと最後までやり切れない。短くて理由が分かる宿題だと前向きに取り組める。",
+    "weakness_history": ["符号処理", "分配法則", "解き直し不足"],
+    "preferred_difficulty": "standard",
+    "attention_level": "urgent",
+    "spotlight": true
+  },
+  {
+    "student_id": "s-04",
+    "display_name": "Ren Suzuki",
+    "grade": "中3",
+    "target_level": "advanced",
+    "persona_summary": "高得点だが関数で一部の設問だけ落とす。",
+    "recent_scores": [89, 92, 90],
+    "homework_style_notes": "応用を少量入れると集中が続く。",
+    "weakness_history": ["関数の読み取り"],
+    "preferred_difficulty": "advanced",
+    "attention_level": "low",
+    "spotlight": false
+  },
+  {
+    "student_id": "s-05",
+    "display_name": "Mio Nakamura",
+    "grade": "小6",
+    "target_level": "basic",
+    "persona_summary": "基礎の理解がまだ浅く、先取りより復習が効果的。",
+    "recent_scores": [45, 49, 50],
+    "homework_style_notes": "5〜10分の小分け課題が向いている。",
+    "weakness_history": ["分数計算", "約分"],
+    "preferred_difficulty": "basic",
+    "attention_level": "high",
+    "spotlight": false
+  },
+  {
+    "student_id": "s-06",
+    "display_name": "Kaito Ito",
+    "grade": "中1",
+    "target_level": "standard",
+    "persona_summary": "ほぼ解けるがケアレスミスが多い。",
+    "recent_scores": [72, 70, 76],
+    "homework_style_notes": "見直しチェックを入れるとミスが減る。",
+    "weakness_history": ["計算の写し間違い", "単位の見落とし"],
+    "preferred_difficulty": "standard",
+    "attention_level": "medium",
+    "spotlight": false
+  }
+]

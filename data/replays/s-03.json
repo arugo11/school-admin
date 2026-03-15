@@ -1,0 +1,84 @@
+{
+  "student_id": "s-03",
+  "source_mode": "replay",
+  "uploaded_image": {
+    "source_image_id": "replay-s03-001",
+    "filename": "s03-signs.svg",
+    "stored_path": "frontend/public/demo-fixtures/s03-signs.svg"
+  },
+  "normalized_ocr": {
+    "student_id": "s-03",
+    "source_image_id": "replay-s03-001",
+    "page_type": "worksheet",
+    "ocr_confidence_summary": {
+      "low_confidence_count": 2,
+      "notes": [
+        "Q2 のマイナス記号が薄く読み取り不確実",
+        "Q4 の解き直し痕跡は推定"
+      ]
+    },
+    "items": [
+      {
+        "problem_no": "Q1",
+        "recognized_answer": "x=4",
+        "teacher_marks": ["circle"],
+        "rewrite_detected": false,
+        "scratch_notes": "途中式は短いが整っている",
+        "raw_text": "Q1 x=4 ○",
+        "uncertainty": []
+      },
+      {
+        "problem_no": "Q2",
+        "recognized_answer": "x= -3",
+        "teacher_marks": ["triangle"],
+        "rewrite_detected": false,
+        "scratch_notes": "分配後の符号が怪しい",
+        "raw_text": "Q2 2(x-1)=4 x=-3 △",
+        "uncertainty": ["minus-sign-unclear"]
+      },
+      {
+        "problem_no": "Q3",
+        "recognized_answer": "x=5",
+        "teacher_marks": ["cross"],
+        "rewrite_detected": false,
+        "scratch_notes": "整理の途中で符号反転ミス",
+        "raw_text": "Q3 x=5 ×",
+        "uncertainty": []
+      },
+      {
+        "problem_no": "Q4",
+        "recognized_answer": "x=2",
+        "teacher_marks": [],
+        "rewrite_detected": true,
+        "scratch_notes": "丸付け後に薄い書き直しあり",
+        "raw_text": "Q4 x=2 -> x=2",
+        "uncertainty": ["rewrite-heuristic"]
+      }
+    ]
+  },
+  "analysis": {
+    "weak_units": ["一次方程式の分配法則", "符号処理"],
+    "error_patterns": ["分配後の符号ミス", "丸付け後の解き直しが浅い"],
+    "homework_load_fit": "light",
+    "analysis_rationale": [
+      "Q2 と Q3 で符号処理の崩れが連続している",
+      "Q4 は書き直し痕跡があるが、自己修正の理由が残っていない"
+    ],
+    "recommended_homework": [
+      {"problem_no": "A-02", "reason": "移項時の符号確認を短く復習する", "difficulty": "basic"},
+      {"problem_no": "A-04", "reason": "分配法則と符号を一緒に確認する", "difficulty": "standard"},
+      {"problem_no": "A-07", "reason": "最後に検算の習慣を付ける", "difficulty": "basic"}
+    ],
+    "teacher_note": "授業冒頭で分配法則の符号だけ3分確認し、宿題は3問で終えられる量にする。",
+    "fallback_used": false,
+    "source_mode": "replay"
+  },
+  "approval": {
+    "student_id": "s-03",
+    "approved_problem_nos": ["A-02", "A-04", "A-07"],
+    "removed_problem_nos": [],
+    "approval_mode": "replay-seeded",
+    "teacher_comment": "まずは短く確実にやり切る宿題セット。",
+    "approved_at": "2026-03-15T18:00:00+09:00"
+  }
+}

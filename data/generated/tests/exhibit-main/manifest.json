@@ -1,0 +1,155 @@
+{
+  "test_id": "ct-exhibit-main",
+  "source_alias": "qa-verify-10k-jp",
+  "source_dataset": "team-victory/qa_verify_10k_test",
+  "source_config": null,
+  "source_split": "train",
+  "generated_at": "2026-03-15T12:35:39.679221+00:00",
+  "generator_version": "confirmation-test-v2",
+  "seed": 101,
+  "problem_count": 6,
+  "difficulty_min": 1,
+  "difficulty_max": 2,
+  "layout": {
+    "page_size": "A4",
+    "columns": 1,
+    "estimated_question_pages": 2,
+    "includes_answer_sheet": true,
+    "max_pages": 3
+  },
+  "target_minutes": 30,
+  "problems": [
+    {
+      "display_no": 1,
+      "problem_id": "4620",
+      "catalog_problem_no": "CT-EXHIBIT-MAIN-Q01",
+      "subject": "比例反比例",
+      "level": 2,
+      "problem": "レシピによれば 1 分で 3 本のパイが焼ける。6 本焼くのに必要な時間 \\(t\\) 分を求めよ。 比例関係は  \n\\(\\displaystyle\\frac{t}{6}=\\frac{1}{3}\\) を使って表せ。",
+      "answer": "2",
+      "solution": "analysisWe need to solve: t/6 = 1/3 => t = 6*(1/3) = 2. So answer 2. Provide step-by-step reasoning. Use LaTeX. No \\displaystyle. Use \\boxed{2}.assistantfinalまず比例関係を式に書きます。  \n\\[\n\\frac{t}{6}=\\frac{1}{3}\n\\]\n\n両辺に \\(6\\) を掛けて \\(t\\) を求めます。  \n\\[\nt = 6 \\times \\frac{1}{3}\n\\]\n\n計算すると  \n\\[\nt = \\frac{6}{3}=2\n\\]\n\nしたがって、6 本のパイを焼くのに必要な時間は  \n\\[\n\\boxed{2}\n\\]",
+      "estimated_minutes": 3,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "4620",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "比例反比例",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 2,
+      "problem_id": "5949",
+      "catalog_problem_no": "CT-EXHIBIT-MAIN-Q02",
+      "subject": "二次関数",
+      "level": 1,
+      "problem": "二次関数 \\(f(x)=ax^2+bx+c\\) が \\(x=3\\) で最小値 \\(-4\\) を取り、さらに \\(f(1)=2\\) であるとき、\\(a+b+c\\) の値を求めよ。",
+      "answer": "2",
+      "solution": "analysisWe need to solve: f(x)=ax^2+bx+c. Vertex at x=3 gives minimum -4. So axis of symmetry x = -b/(2a) = 3 => -b/(2a)=3 => b = -6a. Also f(3) = a*9 + b*3 + c = -4. Substitute b: 9a + 3(-6a) + c = -4 => 9a -18a + c = -4 => -9a + c = -4 => c = -4 + 9a.\n\nAlso f(1)=2: a*1 + b*1 + c = 2 => a + b + c = 2. Substitute b and c: a + (-6a) + (-4 + 9a) = 2 => a -6a -4 +9a = 2 => (a -6a +9a) = 4a? Wait compute: a -6a = -5a; -5a +9a = 4a. So 4a -4 = 2 => 4a = 6 => a = 6/4 = 3/2.\n\nThen b = -6a = -6*(3/2) = -9. c = -4 + 9a = -4 + 9*(3/2) = -4 + 27/2 = (-8/2 + 27/2) = 19/2.\n\nNow a+b+c = 3/2 -9 + 19/2 = combine: 3/2 + 19/2 = 22/2 = 11. 11 - 9 = 2. So answer 2.\n\nCheck: f(x)= (3/2)x^2 -9x + 19/2. Vertex at x = -b/(2a) = 9/(3) = 3. f(3)= (3/2)*9 -9*3 + 19/2 = (27/2) -27 + 19/2 = (27+19)/2 -27 = 46/2 -27 = 23 -27 = -4. Good. f(1)=3/2 -9 + 19/2 = (3+19)/2 -9 = 22/2 -9 = 11 -9 = 2. Good.\n\nThus a+b+c=2. Provide step-by-step reasoning. Use latex. Ensure final answer in \\boxed{2}.assistantfinal**解法**\n\n1. **頂点の条件**  \n   二次関数  \n   \\[\n   f(x)=ax^{2}+bx+c\n   \\]\n   の頂点は \\(x=-\\dfrac{b}{2a}\\) にある。  \n   与えられた頂点が \\(x=3\\) であるから  \n   \\[\n   -\\frac{b}{2a}=3 \\quad\\Longrightarrow\\quad b=-6a \\tag{1}\n   \\]\n\n2. **頂点での値**  \n   頂点での関数値は \\(-4\\) である。  \n   \\[\n   f(3)=a(3)^{2}+b(3)+c=-4\n   \\]\n   ここに (1) を代入すると  \n   \\[\n   9a+3(-6a)+c=-4 \\;\\Longrightarrow\\; -9a+c=-4\n   \\]\n   よって  \n   \\[\n   c=-4+9a \\tag{2}\n   \\]\n\n3. **別の点での値**  \n   \\(f(1)=2\\) である。  \n   \\[\n   a(1)^{2}+b(1)+c=2\n   \\]\n   (1) と (2) を代入すると  \n   \\[\n   a-6a-4+9a=2 \\;\\Longrightarrow\\; 4a-4=2\n   \\]\n   したがって  \n   \\[\n   4a=6 \\;\\Longrightarrow\\; a=\\frac{3}{2}\n   \\]\n\n4. **\\(b\\) と \\(c\\) の計算**  \n   \\[\n   b=-6a=-6\\left(\\frac{3}{2}\\right)=-9\n   \\]\n   \\[\n   c=-4+9a=-4+9\\left(\\frac{3}{2}\\right)=\\frac{19}{2}\n   \\]\n\n5. **\\(a+b+c\\) の値**  \n   \\[\n   a+b+c=\\frac{3}{2}-9+\\frac{19}{2}\n   =\\frac{3+19}{2}-9\n   =\\frac{22}{2}-9\n   =11-9\n   =2\n   \\]\n\n\\[\n\\boxed{2}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "5949",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "二次関数",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 3,
+      "problem_id": "2177",
+      "catalog_problem_no": "CT-EXHIBIT-MAIN-Q03",
+      "subject": "三角関数",
+      "level": 1,
+      "problem": "\\( \\tan x = 1 \\) である \\(x\\) を \\((0,2\\pi)\\) の範囲で考えるとき、\\(\\sin x\\) の最大値を求めなさい。",
+      "answer": "\\frac{\\sqrt{2}}{2}",
+      "solution": "analysisWe need to solve tan x = 1, x in (0, 2π). tan x = 1 occurs at x = π/4 + kπ. In (0, 2π), k=0 gives π/4, k=1 gives 5π/4. So x = π/4 or 5π/4. For each, compute sin x. sin(π/4)=√2/2. sin(5π/4)= -√2/2. Max is √2/2. So answer: √2/2. Provide step-by-step reasoning. Then final answer in boxed. Ensure no \\displaystyle. Use latex. So final: \\boxed{\\frac{\\sqrt{2}}{2}}.assistantfinalまず \\(\\tan x = 1\\) を満たす角 \\(x\\) を \\((0,2\\pi)\\) の範囲で求める。  \n\\[\n\\tan x = 1 \\quad\\Longrightarrow\\quad x = \\frac{\\pi}{4} + k\\pi \\qquad (k\\in\\mathbb Z)\n\\]\n\\((0,2\\pi)\\) に入るものは  \n\\[\nx_1=\\frac{\\pi}{4}, \\qquad x_2=\\frac{5\\pi}{4}.\n\\]\n\n次にそれぞれの角で \\(\\sin x\\) を計算する。\n\n* \\(x_1=\\frac{\\pi}{4}\\) のとき  \n  \\[\n  \\sin\\frac{\\pi}{4} = \\frac{\\sqrt{2}}{2}.\n  \\]\n\n* \\(x_2=\\frac{5\\pi}{4}\\) のとき  \n  \\[\n  \\sin\\frac{5\\pi}{4} = -\\frac{\\sqrt{2}}{2}.\n  \\]\n\n\\(\\sin x\\) の値は \\(\\frac{\\sqrt{2}}{2}\\) と \\(-\\frac{\\sqrt{2}}{2}\\) の二つで、最大値は  \n\\[\n\\frac{\\sqrt{2}}{2}.\n\\]\n\n\\[\n\\boxed{\\frac{\\sqrt{2}}{2}}\n\\]",
+      "estimated_minutes": 2,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "2177",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "三角関数",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 4,
+      "problem_id": "4367",
+      "catalog_problem_no": "CT-EXHIBIT-MAIN-Q04",
+      "subject": "数列",
+      "level": 2,
+      "problem": "数列 \\(\\{a_n\\}\\) は \\(a_1=1\\) で、\\(a_{n+1}=a_n+2n\\) （\\(n\\ge1\\)）を満たすものとする。このとき \\(a_{10}\\) を求めよ。",
+      "answer": "91",
+      "solution": "analysisWe need to compute a_n defined by a1=1, a_{n+1}=a_n+2n. So it's arithmetic progression with difference 2n? Wait difference depends on n. So we can compute a_n formula: a_n = 1 + sum_{k=1}^{n-1} 2k = 1 + 2 * sum_{k=1}^{n-1} k = 1 + 2 * (n-1)n/2 = 1 + (n-1)n = 1 + n^2 - n = n^2 - n + 1. For n=10: 10^2 - 10 + 1 = 100 - 10 + 1 = 91. So answer 91. Provide step-by-step reasoning. Use LaTeX. Ensure final answer in \\boxed{91}. No units. No \\displaystyle. Use plain LaTeX. Let's produce.assistantfinalまず、再帰式  \n\\[\na_{n+1}=a_n+2n \\qquad (n\\ge 1)\n\\]\nを展開して \\(a_n\\) を直接求める。\n\n---\n\n### 1.  \\(a_n\\) を和で表す  \n\\(a_1=1\\) から  \n\\[\n\\begin{aligned}\na_2 &= a_1+2\\cdot1 = 1+2,\\\\\na_3 &= a_2+2\\cdot2 = 1+2+4,\\\\\n&\\;\\;\\vdots\\\\\na_n &= a_1+\\sum_{k=1}^{\\,n-1} 2k .\n\\end{aligned}\n\\]\n\n---\n\n### 2.  和を計算  \n\\[\n\\sum_{k=1}^{\\,n-1} 2k = 2\\sum_{k=1}^{\\,n-1} k\n= 2\\cdot\\frac{(n-1)n}{2}\n= (n-1)n .\n\\]\n\nしたがって  \n\\[\na_n = 1 + (n-1)n = n^2 - n + 1 .\n\\]\n\n---\n\n### 3.  \\(n=10\\) を代入  \n\\[\na_{10}=10^2-10+1=100-10+1=91 .\n\\]\n\n---\n\n\\[\n\\boxed{91}\n\\]",
+      "estimated_minutes": 3,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "4367",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "数列",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 5,
+      "problem_id": "8141",
+      "catalog_problem_no": "CT-EXHIBIT-MAIN-Q05",
+      "subject": "数と式",
+      "level": 2,
+      "problem": "次式の値を求めよ：  \n\\[\n\\frac{2^3-3\\times4+5}{7-8+9}\n\\]",
+      "answer": "\\frac{1}{8}",
+      "solution": "analysisWe need to compute (2^3 - 3×4 + 5) / (7 - 8 + 9). Let's compute numerator: 2^3 = 8. 3×4 = 12. So 8 - 12 + 5 = (8 - 12) + 5 = -4 + 5 = 1. Denominator: 7 - 8 + 9 = (7 - 8) + 9 = -1 + 9 = 8. So expression = 1 / 8 = 0.125. But we need to output as a number or fraction? The final answer should be a single number or expression. We can output 1/8. That is a fraction. So \\boxed{\\frac{1}{8}}. Ensure no \\displaystyle. Use latex. So final answer: \\boxed{\\frac{1}{8}}.assistantfinalまず分子と分母をそれぞれ計算します。\n\n\\[\n\\begin{aligned}\n\\text{分子}&=2^3-3\\times4+5\\\\\n          &=8-12+5\\\\\n          &=-4+5\\\\\n          &=1\n\\end{aligned}\n\\]\n\n\\[\n\\begin{aligned}\n\\text{分母}&=7-8+9\\\\\n          &=-1+9\\\\\n          &=8\n\\end{aligned}\n\\]\n\nしたがって式全体は\n\n\\[\n\\frac{1}{8}\n\\]\n\nとなります。  \n\\[\n\\boxed{\\frac{1}{8}}\n\\]",
+      "estimated_minutes": 3,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "8141",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "数と式",
+        "tag_hints": []
+      }
+    },
+    {
+      "display_no": 6,
+      "problem_id": "7341",
+      "catalog_problem_no": "CT-EXHIBIT-MAIN-Q06",
+      "subject": "積分",
+      "level": 2,
+      "problem": "次の定積分\n\n\\[\n\\int_{0}^{1} (2x^{3}-3x^{2}+x-1)\\,dx\n\\]\n\nの値を求めよ。",
+      "answer": "-1",
+      "solution": "analysisWe need to compute integral from 0 to 1 of (2x^3 - 3x^2 + x - 1) dx. Let's integrate term by term: ∫2x^3 dx = 2 * x^4/4 = x^4/2? Wait: ∫x^3 dx = x^4/4. So 2 * x^4/4 = x^4/2. Next ∫-3x^2 dx = -3 * x^3/3 = -x^3. Next ∫x dx = x^2/2. Next ∫-1 dx = -x. So antiderivative: F(x) = x^4/2 - x^3 + x^2/2 - x. Evaluate from 0 to 1: F(1) = 1/2 - 1 + 1/2 - 1 = (1/2+1/2) - 1 - 1 = 1 - 2 = -1. F(0) = 0. So integral = -1. So answer: \\boxed{-1}. Provide step-by-step reasoning. Ensure no \\displaystyle. Use latex. Provide final answer.assistantfinalまず、被積分関数を項ごとに積分します。\n\n\\[\n\\int (2x^{3}-3x^{2}+x-1)\\,dx\n= \\int 2x^{3}\\,dx-\\int 3x^{2}\\,dx+\\int x\\,dx-\\int 1\\,dx\n\\]\n\n各項の不定積分は\n\n\\[\n\\begin{aligned}\n\\int 2x^{3}\\,dx &= 2\\cdot\\frac{x^{4}}{4}= \\frac{x^{4}}{2},\\\\[4pt]\n\\int 3x^{2}\\,dx &= 3\\cdot\\frac{x^{3}}{3}= x^{3},\\\\[4pt]\n\\int x\\,dx &= \\frac{x^{2}}{2},\\\\[4pt]\n\\int 1\\,dx &= x.\n\\end{aligned}\n\\]\n\nしたがって、原始関数は\n\n\\[\nF(x)=\\frac{x^{4}}{2}-x^{3}+\\frac{x^{2}}{2}-x.\n\\]\n\n定積分は原始関数を上限と下限で評価します。\n\n\\[\n\\begin{aligned}\n\\int_{0}^{1} (2x^{3}-3x^{2}+x-1)\\,dx\n&=F(1)-F(0)\\\\[4pt]\n&=\\left(\\frac{1}{2}-1+\\frac{1}{2}-1\\right)-0\\\\[4pt]\n&=1-2\\\\[4pt]\n&=-1.\n\\end{aligned}\n\\]\n\n\\[\n\\boxed{-1}\n\\]",
+      "estimated_minutes": 3,
+      "source_dataset": "team-victory/qa_verify_10k_test",
+      "source_config": null,
+      "source_split": "train",
+      "source_unique_id": "7341",
+      "answer_zone_type": "final_answer",
+      "work_area_label": "計算過程",
+      "final_area_label": "最終解答",
+      "metadata": {
+        "unit_name": "積分",
+        "tag_hints": []
+      }
+    }
+  ]
+}

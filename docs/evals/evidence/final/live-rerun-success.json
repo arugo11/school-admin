@@ -1,0 +1,10 @@
+{
+  "timings": {
+    "upload_to_ocr_review_ms": 2243,
+    "ocr_review_to_analysis_ms": 4508,
+    "homework_review_to_complete_ms": 49,
+    "total_ms": 9180
+  },
+  "finalUrl": "http://127.0.0.1:4174/demo-dashboard",
+  "text": "SCHOOL ADMIN MVP\n\n答案を撮るだけで、今夜の宿題まで\nLive Mode\nYuna Kobayashi\n6人一覧\nアップロード\nOCR確認\n分析\n宿題承認\n講師承認が完了しました。\nデモ完了\n\n講師が承認し、今夜の宿題が確定しました。\n\n生徒\nYuna Kobayashi\nモード\nlive\n承認問題数\n2\n確認テストID\nct-exhibit-main\nA-02\nC-01\n次の生徒を見る\n審査向けメッセージ\n\n教師を置き換えるのではなく、準備時間を圧縮します。\n\n現場価値: 授業前20分で6人分の個別宿題設計を助ける\n技術実装: 答案画像という現実入力を OCR と LLM に接続\nデモ体験: 撮るだけで宿題候補が出て、講師が最後に整える\n発展性: 将来は OCR と分析を edge 側に寄せられる"
+}

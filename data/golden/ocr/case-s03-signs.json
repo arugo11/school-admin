@@ -1,0 +1,61 @@
+{
+  "student_id": "s-03",
+  "source_image_id": "case-s03-signs-img",
+  "page_type": "worksheet",
+  "ocr_confidence_summary": {
+    "low_confidence_count": 2,
+    "notes": [
+      "Q2: low-confidence",
+      "Q4: low-confidence, rewrite-heuristic"
+    ]
+  },
+  "items": [
+    {
+      "problem_no": "Q1",
+      "recognized_answer": "x=4 ○",
+      "teacher_marks": [
+        "circle"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "",
+      "raw_text": "Q1 x=4 ○",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q2",
+      "recognized_answer": "2(x-1)=4 x=-3 △",
+      "teacher_marks": [
+        "triangle"
+      ],
+      "rewrite_detected": true,
+      "scratch_notes": "teacher likely marked partial understanding; possible rewrite trace; OCR confidence is low",
+      "raw_text": "Q2 2(x-1)=4 x=-3 △",
+      "uncertainty": [
+        "low-confidence"
+      ]
+    },
+    {
+      "problem_no": "Q3",
+      "recognized_answer": "x=5 ×",
+      "teacher_marks": [
+        "cross"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "teacher likely marked incorrect",
+      "raw_text": "Q3 x=5 ×",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q4",
+      "recognized_answer": "x=2 -> x=2",
+      "teacher_marks": [],
+      "rewrite_detected": true,
+      "scratch_notes": "possible rewrite trace; OCR confidence is low",
+      "raw_text": "Q4 x=2 -> x=2",
+      "uncertainty": [
+        "low-confidence",
+        "rewrite-heuristic"
+      ]
+    }
+  ]
+}

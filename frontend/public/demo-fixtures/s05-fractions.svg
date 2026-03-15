@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <rect width="900" height="1200" fill="#f5efe8"/>
+  <rect x="60" y="60" width="780" height="1080" rx="24" fill="#fffefa" stroke="#dac8b8" stroke-width="4"/>
+  <text x="100" y="150" font-size="40" font-family="Georgia, serif" fill="#60432b">Mio / 分数</text>
+  <text x="110" y="260" font-size="34" font-family="Courier New, monospace" fill="#222">Q1   2/4 = 1/2   ○</text>
+  <text x="110" y="350" font-size="34" font-family="Courier New, monospace" fill="#222">Q2   3/9 = 3/9   ×</text>
+  <text x="110" y="440" font-size="34" font-family="Courier New, monospace" fill="#222">Q3   1/2 + 1/3 = 2/5   △</text>
+</svg>

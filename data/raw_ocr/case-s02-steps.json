@@ -1,0 +1,8 @@
+{
+  "status": "succeeded",
+  "analyzeResult": {"readResults": [{"page": 1, "lines": [
+    {"text": "Q1 x=7 ○", "confidence": 0.95},
+    {"text": "Q2 x=9 ×", "confidence": 0.90},
+    {"text": "Q3 3x=12 x=4 △", "confidence": 0.71}
+  ]}]}
+}

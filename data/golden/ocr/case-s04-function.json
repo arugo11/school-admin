@@ -1,0 +1,47 @@
+{
+  "student_id": "s-04",
+  "source_image_id": "case-s04-function-img",
+  "page_type": "worksheet",
+  "ocr_confidence_summary": {
+    "low_confidence_count": 1,
+    "notes": [
+      "Q3: low-confidence, ambiguous-character"
+    ]
+  },
+  "items": [
+    {
+      "problem_no": "Q1",
+      "recognized_answer": "y=2x ○",
+      "teacher_marks": [
+        "circle"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "",
+      "raw_text": "Q1 y=2x ○",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q2",
+      "recognized_answer": "x=3 のとき y=6 ○",
+      "teacher_marks": [
+        "circle"
+      ],
+      "rewrite_detected": true,
+      "scratch_notes": "possible rewrite trace",
+      "raw_text": "Q2 x=3 のとき y=6 ○",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q3",
+      "recognized_answer": "変域 1<=x<=4 ?",
+      "teacher_marks": [],
+      "rewrite_detected": true,
+      "scratch_notes": "possible rewrite trace; OCR confidence is low",
+      "raw_text": "Q3 変域 1<=x<=4 ?",
+      "uncertainty": [
+        "low-confidence",
+        "ambiguous-character"
+      ]
+    }
+  ]
+}

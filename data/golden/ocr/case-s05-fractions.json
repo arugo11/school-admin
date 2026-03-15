@@ -1,0 +1,44 @@
+{
+  "student_id": "s-05",
+  "source_image_id": "case-s05-fractions-img",
+  "page_type": "worksheet",
+  "ocr_confidence_summary": {
+    "low_confidence_count": 0,
+    "notes": []
+  },
+  "items": [
+    {
+      "problem_no": "Q1",
+      "recognized_answer": "2/4 = 1/2 ○",
+      "teacher_marks": [
+        "circle"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "",
+      "raw_text": "Q1 2/4 = 1/2 ○",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q2",
+      "recognized_answer": "3/9 = 3/9 ×",
+      "teacher_marks": [
+        "cross"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "teacher likely marked incorrect",
+      "raw_text": "Q2 3/9 = 3/9 ×",
+      "uncertainty": []
+    },
+    {
+      "problem_no": "Q3",
+      "recognized_answer": "1/2 + 1/3 = 2/5 △",
+      "teacher_marks": [
+        "triangle"
+      ],
+      "rewrite_detected": false,
+      "scratch_notes": "teacher likely marked partial understanding",
+      "raw_text": "Q3 1/2 + 1/3 = 2/5 △",
+      "uncertainty": []
+    }
+  ]
+}

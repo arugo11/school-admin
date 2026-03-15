@@ -1,0 +1,39 @@
+{
+  "weak_units": [
+    "計算の写し間違い",
+    "単位の見落とし"
+  ],
+  "error_patterns": [
+    "誤答が残っている設問がある"
+  ],
+  "homework_load_fit": "appropriate",
+  "analysis_rationale": [
+    "OCRから 1 件の要確認箇所が見つかった",
+    "Kaito Ito には 4 問の短い復習セットを優先した"
+  ],
+  "recommended_homework": [
+    {
+      "problem_no": "A-02",
+      "reason": "一次方程式の移項と整理を短く復習する",
+      "difficulty": "basic"
+    },
+    {
+      "problem_no": "B-01",
+      "reason": "分数計算の約分を短く復習する",
+      "difficulty": "basic"
+    },
+    {
+      "problem_no": "C-01",
+      "reason": "関数の比例を短く復習する",
+      "difficulty": "standard"
+    },
+    {
+      "problem_no": "A-05",
+      "reason": "正負の数の符号処理を短く復習する",
+      "difficulty": "basic"
+    }
+  ],
+  "teacher_note": "ライブ分析が不安定な場合でも、このセットなら講師がその場で説明しやすい。",
+  "fallback_used": true,
+  "source_mode": "live"
+}

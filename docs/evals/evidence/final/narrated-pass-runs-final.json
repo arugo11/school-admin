@@ -1,0 +1,70 @@
+{
+  "pass60": {
+    "mode": "replay-60s-final",
+    "total_ms": 47229,
+    "beats": [
+      {
+        "name": "students",
+        "ms": 56
+      },
+      {
+        "name": "student-detail",
+        "ms": 7103
+      },
+      {
+        "name": "upload",
+        "ms": 13117
+      },
+      {
+        "name": "ocr-review",
+        "ms": 19146
+      },
+      {
+        "name": "analysis",
+        "ms": 27178
+      },
+      {
+        "name": "homework-review",
+        "ms": 37200
+      },
+      {
+        "name": "demo-dashboard",
+        "ms": 43228
+      }
+    ]
+  },
+  "pass120": {
+    "mode": "live-120s-final",
+    "total_ms": 88623,
+    "beats": [
+      {
+        "name": "students",
+        "ms": 36
+      },
+      {
+        "name": "student-detail",
+        "ms": 8080
+      },
+      {
+        "name": "upload",
+        "ms": 17097
+      },
+      {
+        "name": "ocr-review",
+        "ms": 28843
+      },
+      {
+        "name": "analysis",
+        "ms": 47554
+      },
+      {
+        "name": "homework-review",
+        "ms": 69594
+      },
+      {
+        "name": "demo-dashboard",
+        "ms": 81623
+      }
+    ]
+  }
+}

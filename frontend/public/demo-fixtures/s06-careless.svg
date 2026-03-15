@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <rect width="900" height="1200" fill="#edf6ef"/>
+  <rect x="60" y="60" width="780" height="1080" rx="24" fill="#fff" stroke="#c6ddca" stroke-width="4"/>
+  <text x="100" y="150" font-size="40" font-family="Georgia, serif" fill="#24513b">Kaito / 計算ドリル</text>
+  <text x="110" y="260" font-size="34" font-family="Courier New, monospace" fill="#222">Q1   18   ○</text>
+  <text x="110" y="350" font-size="34" font-family="Courier New, monospace" fill="#222">Q2   42   ×</text>
+  <text x="110" y="440" font-size="34" font-family="Courier New, monospace" fill="#222">Q3   15?   △</text>
+</svg>

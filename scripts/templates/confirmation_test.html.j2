@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ manifest.test_id }} 確認テスト</title>
+    <link rel="stylesheet" href="{{ katex.katex_css }}" />
+    <script defer src="{{ katex.katex_js }}"></script>
+    <script defer src="{{ katex.katex_autorender_js }}"></script>
+    <style>
+      @page { size: A4; margin: 10mm; }
+      :root {
+        color: #1f1f1f;
+        font-family: 'Source Han Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      body {
+        margin: 0;
+        background: #f2f2f2;
+      }
+      .page {
+        page-break-after: always;
+        min-height: 276mm;
+        display: flex;
+        flex-direction: column;
+      }
+      .page:last-child { page-break-after: auto; }
+      .paper {
+        min-height: 100%;
+        background: #ffffff;
+        border: 1px solid #b8b8b8;
+        border-radius: 14px;
+        padding: 8mm;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        gap: 8mm;
+        align-items: flex-start;
+        padding-bottom: 5mm;
+        border-bottom: 2px solid #222;
+        margin-bottom: 5mm;
+      }
+      .header h1 {
+        margin: 0 0 2mm;
+        font-family: 'BIZ UDPMincho', 'Hiragino Mincho ProN', serif;
+        font-size: 24px;
+        letter-spacing: 0.02em;
+      }
+      .header p, .meta p {
+        margin: 0;
+      }
+      .meta {
+        text-align: right;
+        font-size: 10px;
+        color: #595959;
+      }
+      .meta p + p {
+        margin-top: 1.5mm;
+      }
+      .exam-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4mm;
+        margin-bottom: 5mm;
+      }
+      .field {
+        border: 1px solid #8f8f8f;
+        border-radius: 10px;
+        min-height: 14mm;
+        padding: 2.5mm 3mm;
+        background: #f8f8f8;
+      }
+      .field-label {
+        font-size: 9px;
+        color: #5c5c5c;
+      }
+      .question-card {
+        border: 1px solid #b5b5b5;
+        border-radius: 14px;
+        padding: 4mm;
+        margin-bottom: 4mm;
+        background: #fdfdfd;
+        break-inside: avoid;
+      }
+      .question-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 3mm;
+        align-items: center;
+        margin-bottom: 2mm;
+      }
+      .question-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 15mm;
+        height: 15mm;
+        border-radius: 999px;
+        background: #262626;
+        color: #fafafa;
+        font-weight: 800;
+      }
+      .subject-pill {
+        font-size: 10px;
+        border-radius: 999px;
+        padding: 1.5mm 3mm;
+        background: #e4e4e4;
+        color: #2f2f2f;
+      }
+      .problem-text { font-size: 13px; }
+      .problem-text p { margin: 0; }
+      .guide {
+        margin-top: auto;
+        padding-top: 4mm;
+        border-top: 1px dashed #9f9f9f;
+        font-size: 10px;
+        color: #555;
+      }
+
+      .answer-sheet .question-card {
+        padding: 0;
+        overflow: hidden;
+      }
+      .answer-sheet-grid {
+        display: grid;
+        grid-template-columns: 16mm 1fr 44mm;
+        min-height: 34mm;
+      }
+      .answer-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 15px;
+        background: #262626;
+        color: #fafafa;
+      }
+      .work-zone, .final-zone {
+        position: relative;
+        padding: 3mm 3.5mm;
+      }
+      .work-zone {
+        background:
+          linear-gradient(180deg, #fbfbfb, #fbfbfb),
+          repeating-linear-gradient(180deg, transparent, transparent 8mm, rgba(110, 110, 110, 0.18) 8mm, rgba(110, 110, 110, 0.18) 8.25mm);
+        border-right: 1px solid #bdbdbd;
+      }
+      .final-zone {
+        background: #f6f6f6;
+        border-left: 2px solid #2a2a2a;
+      }
+      .zone-label {
+        display: inline-block;
+        margin-bottom: 2mm;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #5c5c5c;
+      }
+      .zone-box {
+        min-height: 20mm;
+        padding: 1mm 0;
+        font-size: 13px;
+        white-space: pre-wrap;
+      }
+      .final-zone .zone-box {
+        min-height: 22mm;
+        border: 2px solid #202020;
+        border-radius: 10px;
+        padding: 3mm;
+        background: #ffffff;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .prefilled {
+        color: #1f1f1f;
+      }
+      .answer-help {
+        display: flex;
+        justify-content: space-between;
+        gap: 3mm;
+        padding: 1.8mm 3mm 2.5mm;
+        font-size: 9px;
+        color: #575757;
+        background: #f1f1f1;
+        border-top: 1px solid #c6c6c6;
+      }
+      .footer-note {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 4mm;
+        padding-top: 4mm;
+        border-top: 1px dashed #9f9f9f;
+        font-size: 10px;
+        color: #555;
+      }
+      .katex-display { margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+    {% for page in question_pages %}
+    <section class="page">
+      <div class="paper">
+        <header class="header">
+          <div>
+            <h1>確認テスト</h1>
+            <p>答えは最後の解答用紙にまとめて記入してください。</p>
+          </div>
+          <div class="meta">
+            <p>test_id: {{ manifest.test_id }}</p>
+            <p>Page {{ loop.index }} / {{ question_pages|length + 1 }}</p>
+            <p>difficulty: {{ manifest.difficulty_min }} - {{ manifest.difficulty_max }}</p>
+          </div>
+        </header>
+        {% if loop.index == 1 %}
+        <div class="exam-info">
+          <div class="field"><div class="field-label">名前</div></div>
+          <div class="field"><div class="field-label">学年</div></div>
+          <div class="field"><div class="field-label">時間</div></div>
+        </div>
+        {% endif %}
+        {% for problem in page %}
+        <article class="question-card">
+          <div class="question-head">
+            <span class="question-no">Q{{ problem.display_no }}</span>
+            <span class="subject-pill">{{ problem.subject }} / Lv.{{ problem.level }}</span>
+          </div>
+          <div class="problem-text">{{ problem.problem }}</div>
+        </article>
+        {% endfor %}
+        <div class="guide">
+          展示では、最後の解答用紙を1枚だけ真上から撮影してください。左に計算過程、右に最終解答を書くと OCR が安定します。
+        </div>
+      </div>
+    </section>
+    {% endfor %}
+
+    <section class="page answer-sheet">
+      <div class="paper">
+        <header class="header">
+          <div>
+            <h1>解答用紙</h1>
+            <p>1枚だけ撮影します。左に計算過程、右の濃い枠に最終解答を書いてください。</p>
+          </div>
+          <div class="meta">
+            <p>test_id: {{ manifest.test_id }}</p>
+            <p>Page {{ question_pages|length + 1 }} / {{ question_pages|length + 1 }}</p>
+            <p>OCR: 最終解答欄を優先して読み取ります</p>
+          </div>
+        </header>
+        <div class="exam-info">
+          <div class="field"><div class="field-label">名前</div></div>
+          <div class="field"><div class="field-label">学年</div></div>
+          <div class="field"><div class="field-label">メモ</div></div>
+        </div>
+        {% for problem in manifest.problems %}
+        {% set filled = filled_answers.get(problem.display_no) if filled_answers else none %}
+        {% set filled_work = filled.work if filled is mapping else '' %}
+        {% set filled_final = filled.final if filled is mapping else (filled if filled else '') %}
+        <article class="question-card">
+          <div class="answer-sheet-grid">
+            <div class="answer-label">Q{{ problem.display_no }}</div>
+            <div class="work-zone">
+              <div class="zone-label">{{ problem.work_area_label }}</div>
+              <div class="zone-box{% if filled_work %} prefilled{% endif %}">{{ filled_work }}</div>
+            </div>
+            <div class="final-zone">
+              <div class="zone-label">{{ problem.final_area_label }}</div>
+              <div class="zone-box{% if filled_final %} prefilled{% endif %}">{{ filled_final }}</div>
+            </div>
+          </div>
+          <div class="answer-help">
+            <span>{{ problem.catalog_problem_no }} / {{ problem.subject }}</span>
+            <span>OCR target: {{ problem.answer_zone_type }}</span>
+          </div>
+        </article>
+        {% endfor %}
+        <div class="footer-note">
+          <span>test_id: {{ manifest.test_id }}</span>
+          <span>manifest から正答と出典へ戻れます</span>
+        </div>
+      </div>
+    </section>
+    <script>
+      window.__renderDone = false;
+      document.addEventListener('DOMContentLoaded', () => {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+        window.__renderDone = true;
+      });
+    </script>
+  </body>
+</html>

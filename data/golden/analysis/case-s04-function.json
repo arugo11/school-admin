@@ -1,0 +1,38 @@
+{
+  "weak_units": [
+    "関数の読み取り"
+  ],
+  "error_patterns": [
+    "解き直し痕跡はあるが理由の言語化が薄い"
+  ],
+  "homework_load_fit": "appropriate",
+  "analysis_rationale": [
+    "OCRから 1 件の要確認箇所が見つかった",
+    "Ren Suzuki には 4 問の短い復習セットを優先した"
+  ],
+  "recommended_homework": [
+    {
+      "problem_no": "A-02",
+      "reason": "一次方程式の移項と整理を短く復習する",
+      "difficulty": "basic"
+    },
+    {
+      "problem_no": "A-04",
+      "reason": "一次方程式の分配法則を短く復習する",
+      "difficulty": "standard"
+    },
+    {
+      "problem_no": "B-01",
+      "reason": "分数計算の約分を短く復習する",
+      "difficulty": "basic"
+    },
+    {
+      "problem_no": "A-05",
+      "reason": "正負の数の符号処理を短く復習する",
+      "difficulty": "basic"
+    }
+  ],
+  "teacher_note": "ライブ分析が不安定な場合でも、このセットなら講師がその場で説明しやすい。",
+  "fallback_used": true,
+  "source_mode": "live"
+}
