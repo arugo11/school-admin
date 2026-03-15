@@ -75,6 +75,30 @@ Deploy the web app with Azure CLI.
 ```
 The script prints a public URL backed by Azure Container Apps.
 
+## GitHub Actions
+`main` への push で GitHub Actions の CI/CD が動きます。
+
+CI:
+- backend test: `pytest backend/tests -q`
+- frontend test: `npm test`
+- frontend build: `npm run build`
+
+CD:
+- Azure login
+- `./scripts/azure_deploy_web.sh`
+- public health check
+- public browser E2E
+
+Required repository secrets:
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+
+The Azure principal needs permission to:
+- push images to `schooladmindemoacr23088`
+- update `school-admin-demo-api`
+- read keys for `schooladminocr23088` and `sitcopilotaoai23088`
+
 Run browser E2E locally or against the deployed URL.
 ```bash
 node scripts/e2e_browser_live.mjs
