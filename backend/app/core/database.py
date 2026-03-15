@@ -36,6 +36,9 @@ CREATE TABLE IF NOT EXISTS students (
     student_id TEXT PRIMARY KEY,
     display_name TEXT NOT NULL,
     grade TEXT NOT NULL,
+    class_name TEXT NOT NULL DEFAULT '',
+    school_name TEXT NOT NULL DEFAULT '',
+    next_regular_exam_date TEXT,
     target_level TEXT NOT NULL,
     persona_summary TEXT NOT NULL,
     recent_scores TEXT NOT NULL,
@@ -67,6 +70,18 @@ CREATE TABLE IF NOT EXISTS student_metrics (
     metric_value REAL NOT NULL,
     metric_date TEXT NOT NULL,
     created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS school_work_progress (
+    progress_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL,
+    subject_name TEXT NOT NULL,
+    workbook_name TEXT NOT NULL,
+    completion_rate INTEGER NOT NULL,
+    completed_pages INTEGER NOT NULL,
+    target_pages INTEGER NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS homework_history (
@@ -114,6 +129,7 @@ CREATE TABLE IF NOT EXISTS student_state_snapshots (
     one_line_analysis TEXT NOT NULL,
     recommended_action TEXT NOT NULL,
     cited_document_titles TEXT NOT NULL,
+    source_rankings TEXT NOT NULL DEFAULT '[]',
     generated_at TEXT NOT NULL,
     generation_mode TEXT NOT NULL,
     fallback_used INTEGER NOT NULL DEFAULT 0
@@ -126,4 +142,14 @@ def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(students)").fetchall()}
+    if "class_name" not in columns:
+        conn.execute("ALTER TABLE students ADD COLUMN class_name TEXT NOT NULL DEFAULT ''")
+    if "school_name" not in columns:
+        conn.execute("ALTER TABLE students ADD COLUMN school_name TEXT NOT NULL DEFAULT ''")
+    if "next_regular_exam_date" not in columns:
+        conn.execute("ALTER TABLE students ADD COLUMN next_regular_exam_date TEXT")
+    snapshot_columns = {row["name"] for row in conn.execute("PRAGMA table_info(student_state_snapshots)").fetchall()}
+    if "source_rankings" not in snapshot_columns:
+        conn.execute("ALTER TABLE student_state_snapshots ADD COLUMN source_rankings TEXT NOT NULL DEFAULT '[]'")
     return conn

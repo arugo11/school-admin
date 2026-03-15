@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from app.core.azure_runtime_keys import azure_cli_key
 from app.core.config import settings
-from app.schemas import AnalysisResult
+from app.schemas import AnalysisResult, StudentStateDraft
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -113,6 +113,24 @@ class AzureOpenAIClient:
         except ValidationError as exc:
             raise RuntimeError(f"analysis-schema-invalid: {exc}") from exc
         return result
+
+    async def summarize_student_state(self, system_prompt: str, user_payload: dict) -> StudentStateDraft:
+        body = {
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
+            ],
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"},
+            "max_tokens": 900,
+        }
+        payload = await self._post_chat(body)
+        content = payload["choices"][0]["message"]["content"]
+        parsed = json.loads(content)
+        try:
+            return StudentStateDraft.model_validate(parsed)
+        except ValidationError as exc:
+            raise RuntimeError(f"student-summary-schema-invalid: {exc}") from exc
 
     async def extract_box_ocr(
         self,

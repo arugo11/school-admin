@@ -4,6 +4,8 @@ import type {
   NormalizedOcr,
   ProblemRegradeResponse,
   RagHomeworkRecommendation,
+  SchoolWorkProgressItem,
+  SchoolWorkProgressUpdateRequest,
   StudentDocument,
   StudentDocumentCreateRequest,
   StudentHomeworkHistoryItem,
@@ -75,6 +77,18 @@ export function createStudentDocument(studentId: string, payload: StudentDocumen
 
 export function fetchStudentHomeworkHistory(studentId: string): Promise<StudentHomeworkHistoryItem[]> {
   return request<StudentHomeworkHistoryItem[]>(`/api/students/${studentId}/homework-history`)
+}
+
+export function fetchStudentSchoolWorkProgress(studentId: string): Promise<SchoolWorkProgressItem[]> {
+  return request<SchoolWorkProgressItem[]>(`/api/students/${studentId}/school-work-progress`)
+}
+
+export function updateStudentSchoolWorkProgress(studentId: string, payload: SchoolWorkProgressUpdateRequest): Promise<SchoolWorkProgressItem> {
+  return request<SchoolWorkProgressItem>(`/api/students/${studentId}/school-work-progress`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
 }
 
 export async function uploadWorksheet(studentId: string, file: File): Promise<UploadResponse> {

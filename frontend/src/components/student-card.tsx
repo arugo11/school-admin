@@ -24,9 +24,10 @@ export function StudentCard({
         <div className="student-card-header">
           <div>
             <p className="student-name">{student.display_name}</p>
-            <p className="student-grade">{student.grade} / {student.target_level}</p>
+            <p className="student-grade">{student.grade} / {student.school_name}</p>
+            <p className="subtle-label">定期テストまで {student.days_until_regular_exam != null ? `${student.days_until_regular_exam}日` : '未設定'}</p>
           </div>
-          <span className={`attention-pill ${student.attention_level}`}>{attentionLabel}</span>
+          <span className={`attention-pill student-attention-pill ${student.attention_level}`}>{attentionLabel}</span>
         </div>
         <div className="student-metrics">
           <div>

@@ -3,6 +3,7 @@ from __future__ import annotations
 import mimetypes
 import logging
 import json
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -19,6 +20,7 @@ from app.schemas import (
     ProblemRegradeRequest,
     ProblemRegradeResponse,
     RagHomeworkRequest,
+    SchoolWorkProgressUpdateRequest,
     StudentDocumentCreateRequest,
     StudentOverviewResponse,
     UploadResponse,
@@ -27,7 +29,7 @@ from app.services.analysis import AnalysisService
 from app.services.data_store import load_catalog, load_students
 from app.services.llm_sheet_ocr import extract_llm_ocr_document
 from app.services.ocr_normalizer import build_ocr_debug_artifact, normalize_ocr_result, persist_ocr_debug_artifact
-from app.services.student_summary import build_fallback_summary, build_rag_homework_recommendation
+from app.services.student_summary import build_fallback_summary, build_rag_homework_recommendation, generate_student_summary
 from app.storage.repository import Repository
 
 router = APIRouter(prefix="/api")
@@ -51,7 +53,15 @@ def _refresh_summary(student_id: str, generation_mode: str = "manual") -> dict:
         raise HTTPException(status_code=404, detail="Student documents not found")
     query = " ".join(student.weakness_history + [student.persona_summary])
     chunks = repo.search_rag_chunks(student_id, query, limit=8)
-    summary = build_fallback_summary(student, metrics, chunks, documents)
+    summary = asyncio.run(
+        generate_student_summary(
+            student=student,
+            metrics=metrics,
+            retrieved_chunks=chunks,
+            documents=documents,
+            client=analysis_service.client,
+        )
+    )
     repo.save_student_summary(summary, generation_mode=generation_mode)
     return summary.model_dump(mode="json")
 
@@ -135,6 +145,7 @@ def get_students() -> list[dict]:
 
 @router.get("/students/overview")
 def get_students_overview() -> dict:
+    load_students()
     items = repo.build_overview_items()
     if not all(item.one_line_analysis for item in items):
         for student in load_students():
@@ -189,6 +200,18 @@ def create_student_document(student_id: str, payload: StudentDocumentCreateReque
 def get_student_homework_history(student_id: str) -> list[dict]:
     _find_student(student_id)
     return [item.model_dump(mode="json") for item in repo.list_homework_history(student_id)]
+
+
+@router.get("/students/{student_id}/school-work-progress")
+def get_student_school_work_progress(student_id: str) -> list[dict]:
+    _find_student(student_id)
+    return [item.model_dump(mode="json") for item in repo.list_school_work_progress(student_id)]
+
+
+@router.post("/students/{student_id}/school-work-progress")
+def update_student_school_work_progress(student_id: str, payload: SchoolWorkProgressUpdateRequest) -> dict:
+    _find_student(student_id)
+    return repo.upsert_school_work_progress(student_id, payload).model_dump(mode="json")
 
 
 @router.get("/catalog")

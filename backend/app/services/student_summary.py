@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime, timezone
 
+from app.clients.azure_openai import AzureOpenAIClient
 from app.schemas import (
     AnalysisResult,
     CatalogProblem,
@@ -10,16 +11,85 @@ from app.schemas import (
     RagChunkSearchResult,
     RagHomeworkRecommendation,
     RecommendedProblemGroup,
+    SummarySourceRanking,
     StudentDocumentResponse,
+    StudentStateDraft,
     StudentHomeworkHistoryItem,
     StudentMetric,
     StudentProfile,
     StudentStateSummary,
 )
 
+SUMMARY_SYSTEM_PROMPT = """
+あなたは学習塾の講師補助AIです。必ずJSONのみを返してください。
+以下のキーを必ず埋めてください。
+- current_status: string
+- risk_signals: string[]
+- next_best_actions: string[]
+- recommended_response: string
+- one_line_analysis: string
+- recommended_action: string
+制約:
+- 取得した文書要約だけを根拠にする
+- 曖昧な推測を増やさない
+- 講師が次に動ける短い表現にする
+- risk_signals と next_best_actions は 2 件以内
+""".strip()
+
 
 def _metric_map(metrics: list[StudentMetric]) -> dict[str, float]:
     return {metric.metric_type: metric.metric_value for metric in metrics}
+
+
+def _used_for(document_type: str, rank: int) -> list[str]:
+    mapping = {
+        "test_report": ["current_status", "risk_signals"],
+        "homework_history": ["risk_signals", "next_best_actions"],
+        "counseling_memo": ["recommended_response"],
+        "teacher_note": ["recommended_response", "next_best_actions"],
+        "mock_exam": ["current_status"],
+        "attendance": ["risk_signals"],
+        "score_trend": ["current_status"],
+    }
+    values = mapping.get(document_type, ["current_status"])
+    if rank == 1 and "current_status" not in values:
+        values = ["current_status", *values]
+    return values[:2]
+
+
+def _section_sources(rankings: list[SummarySourceRanking], key: str) -> list[str]:
+    labels = []
+    for ranking in rankings:
+        if key in ranking.used_for:
+            labels.append(f"{ranking.rank}位 {ranking.title}")
+    return labels[:3]
+
+
+def _build_summary_from_draft(
+    *,
+    student_id: str,
+    draft: StudentStateDraft,
+    source_rankings: list[SummarySourceRanking],
+    titles: list[str],
+    fallback_used: bool,
+) -> StudentStateSummary:
+    return StudentStateSummary(
+        student_id=student_id,
+        current_status=draft.current_status,
+        risk_signals=draft.risk_signals[:2],
+        next_best_actions=draft.next_best_actions[:2],
+        recommended_response=draft.recommended_response,
+        one_line_analysis=draft.one_line_analysis,
+        recommended_action=draft.recommended_action,
+        cited_document_titles=titles[:3],
+        source_rankings=source_rankings,
+        current_status_sources=_section_sources(source_rankings, "current_status"),
+        risk_signal_sources=_section_sources(source_rankings, "risk_signals"),
+        next_best_action_sources=_section_sources(source_rankings, "next_best_actions"),
+        recommended_response_sources=_section_sources(source_rankings, "recommended_response"),
+        generated_at=datetime.now(timezone.utc),
+        fallback_used=fallback_used,
+    )
 
 
 def build_fallback_summary(
@@ -41,6 +111,16 @@ def build_fallback_summary(
             "attendance": 6,
         }.get(chunk.document_type, 7),
     )
+    source_rankings = [
+        SummarySourceRanking(
+            rank=index + 1,
+            title=chunk.title,
+            document_type=chunk.document_type,
+            score=round(chunk.score, 3),
+            used_for=_used_for(chunk.document_type, index + 1),
+        )
+        for index, chunk in enumerate(preferred_chunks[:5])
+    ]
     titles = [chunk.title for chunk in preferred_chunks[:3]]
     while len(titles) < 3:
         fallback_title = documents[min(len(titles), len(documents) - 1)].title if documents else f"{student.display_name} 文書"
@@ -65,18 +145,91 @@ def build_fallback_summary(
     recommended_response = "量より定着を優先し, 次回授業で原因説明まで確認する"
     one_line_analysis = student.one_line_analysis or f"{student.weakness_history[0]}が継続課題"
     recommended_action = student.recommended_action or next_actions[0]
-    return StudentStateSummary(
-        student_id=student.student_id,
+    draft = StudentStateDraft(
         current_status=current_status,
         risk_signals=risk_signals[:2],
         next_best_actions=next_actions[:2],
         recommended_response=recommended_response,
         one_line_analysis=one_line_analysis,
         recommended_action=recommended_action,
-        cited_document_titles=titles[:3],
-        generated_at=datetime.now(timezone.utc),
+    )
+    return _build_summary_from_draft(
+        student_id=student.student_id,
+        draft=draft,
+        source_rankings=source_rankings,
+        titles=titles,
         fallback_used=True,
     )
+
+
+async def generate_student_summary(
+    *,
+    student: StudentProfile,
+    metrics: list[StudentMetric],
+    retrieved_chunks: list[RagChunkSearchResult],
+    documents: list[StudentDocumentResponse],
+    client: AzureOpenAIClient | None = None,
+) -> StudentStateSummary:
+    metric_map = _metric_map(metrics)
+    preferred_chunks = sorted(
+        retrieved_chunks,
+        key=lambda chunk: {
+            "test_report": 0,
+            "homework_history": 1,
+            "counseling_memo": 2,
+            "teacher_note": 3,
+            "mock_exam": 4,
+            "score_trend": 5,
+            "attendance": 6,
+        }.get(chunk.document_type, 7),
+    )
+    source_rankings = [
+        SummarySourceRanking(
+            rank=index + 1,
+            title=chunk.title,
+            document_type=chunk.document_type,
+            score=round(chunk.score, 3),
+            used_for=_used_for(chunk.document_type, index + 1),
+        )
+        for index, chunk in enumerate(preferred_chunks[:5])
+    ]
+    titles = [chunk.title for chunk in preferred_chunks[:3]]
+    while len(titles) < 3:
+        fallback_title = documents[min(len(titles), len(documents) - 1)].title if documents else f"{student.display_name} 文書"
+        titles.append(fallback_title)
+
+    payload = {
+        "student": {
+            "student_id": student.student_id,
+            "display_name": student.display_name,
+            "grade": student.grade,
+            "class_name": student.class_name,
+        },
+        "metrics": metric_map,
+        "retrieved_chunks": [
+            {
+                "rank": ranking.rank,
+                "title": ranking.title,
+                "document_type": ranking.document_type,
+                "score": ranking.score,
+                "used_for_hint": ranking.used_for,
+                "content": chunk.chunk_text,
+            }
+            for ranking, chunk in zip(source_rankings, preferred_chunks[:5], strict=False)
+        ],
+    }
+    aoai_client = client or AzureOpenAIClient()
+    try:
+        draft = await aoai_client.summarize_student_state(SUMMARY_SYSTEM_PROMPT, payload)
+        return _build_summary_from_draft(
+            student_id=student.student_id,
+            draft=draft,
+            source_rankings=source_rankings,
+            titles=titles,
+            fallback_used=False,
+        )
+    except Exception:
+        return build_fallback_summary(student, metrics, retrieved_chunks, documents)
 
 
 def build_rag_homework_recommendation(

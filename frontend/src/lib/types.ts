@@ -2,6 +2,10 @@ export type StudentProfile = {
   student_id: string
   display_name: string
   grade: string
+  class_name?: string
+  school_name?: string
+  next_regular_exam_date?: string | null
+  days_until_regular_exam?: number | null
   target_level: string
   persona_summary: string
   recent_scores: number[]
@@ -124,6 +128,10 @@ export type StudentOverviewItem = {
   student_id: string
   display_name: string
   grade: string
+  class_name: string
+  school_name: string
+  next_regular_exam_date?: string | null
+  days_until_regular_exam?: number | null
   target_level: string
   attention_level: 'low' | 'medium' | 'high' | 'urgent'
   homework_completion_rate: number
@@ -149,6 +157,17 @@ export type StudentStateSummary = {
   one_line_analysis: string
   recommended_action: string
   cited_document_titles: string[]
+  current_status_sources: string[]
+  risk_signal_sources: string[]
+  next_best_action_sources: string[]
+  recommended_response_sources: string[]
+  source_rankings: {
+    rank: number
+    title: string
+    document_type: 'test_report' | 'score_trend' | 'homework_history' | 'counseling_memo' | 'teacher_note' | 'attendance' | 'mock_exam'
+    score: number
+    used_for: ('current_status' | 'risk_signals' | 'next_best_actions' | 'recommended_response')[]
+  }[]
   generated_at: string
   fallback_used: boolean
 }
@@ -184,6 +203,27 @@ export type StudentHomeworkHistoryItem = {
   completion_status: string
   teacher_comment: string
   created_at: string
+}
+
+export type SchoolWorkProgressItem = {
+  progress_id: number
+  student_id: string
+  subject_name: string
+  workbook_name: string
+  completion_rate: number
+  completed_pages: number
+  target_pages: number
+  note: string
+  updated_at: string
+}
+
+export type SchoolWorkProgressUpdateRequest = {
+  subject_name: string
+  workbook_name: string
+  completion_rate: number
+  completed_pages: number
+  target_pages: number
+  note: string
 }
 
 export type RecommendedProblemGroup = {

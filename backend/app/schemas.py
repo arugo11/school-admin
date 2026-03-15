@@ -10,6 +10,10 @@ class StudentProfile(BaseModel):
     student_id: str
     display_name: str
     grade: str
+    class_name: str = ""
+    school_name: str = ""
+    next_regular_exam_date: datetime | None = None
+    days_until_regular_exam: int | None = None
     target_level: str
     persona_summary: str
     recent_scores: list[int]
@@ -300,6 +304,11 @@ class StudentStateSummary(BaseModel):
     one_line_analysis: str
     recommended_action: str
     cited_document_titles: list[str]
+    source_rankings: list["SummarySourceRanking"] = Field(default_factory=list)
+    current_status_sources: list[str] = Field(default_factory=list)
+    risk_signal_sources: list[str] = Field(default_factory=list)
+    next_best_action_sources: list[str] = Field(default_factory=list)
+    recommended_response_sources: list[str] = Field(default_factory=list)
     generated_at: datetime
     fallback_used: bool = False
 
@@ -311,15 +320,60 @@ class StudentStateSummary(BaseModel):
         return value[:3]
 
 
+class SummarySourceRanking(BaseModel):
+    rank: int
+    title: str
+    document_type: DocumentType
+    score: float
+    used_for: list[Literal["current_status", "risk_signals", "next_best_actions", "recommended_response"]]
+
+
+StudentStateSummary.model_rebuild()
+
+
+class StudentStateDraft(BaseModel):
+    current_status: str
+    risk_signals: list[str]
+    next_best_actions: list[str]
+    recommended_response: str
+    one_line_analysis: str
+    recommended_action: str
+
+
 class StudentOverviewItem(BaseModel):
     student_id: str
     display_name: str
     grade: str
+    class_name: str
+    school_name: str
+    next_regular_exam_date: datetime | None = None
+    days_until_regular_exam: int | None = None
     target_level: str
     attention_level: Literal["low", "medium", "high", "urgent"]
     homework_completion_rate: int
     one_line_analysis: str
     recommended_action: str
+
+
+class SchoolWorkProgressItem(BaseModel):
+    progress_id: int
+    student_id: str
+    subject_name: str
+    workbook_name: str
+    completion_rate: int
+    completed_pages: int
+    target_pages: int
+    note: str = ""
+    updated_at: datetime
+
+
+class SchoolWorkProgressUpdateRequest(BaseModel):
+    subject_name: str
+    workbook_name: str
+    completion_rate: int = Field(ge=0, le=100)
+    completed_pages: int = Field(ge=0)
+    target_pages: int = Field(ge=1)
+    note: str = ""
 
 
 class StudentOverviewResponse(BaseModel):

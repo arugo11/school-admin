@@ -8,6 +8,9 @@ from app.core.database import get_connection
 from app.schemas import (
     HomeworkApproval,
     RagChunkSearchResult,
+    SchoolWorkProgressItem,
+    SchoolWorkProgressUpdateRequest,
+    SummarySourceRanking,
     StudentDocumentCreateRequest,
     StudentDocumentResponse,
     StudentHomeworkHistoryItem,
@@ -26,21 +29,66 @@ class Repository:
         with get_connection() as conn:
             existing = conn.execute("SELECT COUNT(*) AS count FROM students").fetchone()["count"]
             if existing:
+                for row in student_rows:
+                    conn.execute(
+                        """
+                        UPDATE students
+                        SET class_name = ?,
+                            school_name = CASE WHEN school_name = '' THEN ? ELSE school_name END,
+                            next_regular_exam_date = COALESCE(next_regular_exam_date, ?),
+                            updated_at = ?
+                        WHERE student_id = ?
+                        """,
+                        (
+                            row.get("class_name", ""),
+                            row.get("school_name", ""),
+                            row.get("next_regular_exam_date"),
+                            datetime.now(timezone.utc).isoformat(),
+                            row["student_id"],
+                        ),
+                    )
+                    progress_count = conn.execute(
+                        "SELECT COUNT(*) AS count FROM school_work_progress WHERE student_id = ?",
+                        (row["student_id"],),
+                    ).fetchone()["count"]
+                    if progress_count == 0:
+                        for progress in row.get("school_work_progress", []):
+                            conn.execute(
+                                """
+                                INSERT INTO school_work_progress (
+                                    student_id, subject_name, workbook_name, completion_rate,
+                                    completed_pages, target_pages, note, updated_at
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                """,
+                                (
+                                    row["student_id"],
+                                    progress["subject_name"],
+                                    progress["workbook_name"],
+                                    progress["completion_rate"],
+                                    progress["completed_pages"],
+                                    progress["target_pages"],
+                                    progress.get("note", ""),
+                                    progress.get("updated_at", datetime.now(timezone.utc).isoformat()),
+                                ),
+                            )
                 return
             now = datetime.now(timezone.utc).isoformat()
             for row in student_rows:
                 conn.execute(
                     """
                     INSERT INTO students (
-                        student_id, display_name, grade, target_level, persona_summary,
+                        student_id, display_name, grade, class_name, school_name, next_regular_exam_date, target_level, persona_summary,
                         recent_scores, homework_style_notes, weakness_history,
                         preferred_difficulty, attention_level, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         row["student_id"],
                         row["display_name"],
                         row["grade"],
+                        row.get("class_name", ""),
+                        row.get("school_name", ""),
+                        row.get("next_regular_exam_date"),
                         row["target_level"],
                         row["persona_summary"],
                         json.dumps(row["recent_scores"], ensure_ascii=False),
@@ -52,6 +100,25 @@ class Repository:
                         now,
                     ),
                 )
+                for progress in row.get("school_work_progress", []):
+                    conn.execute(
+                        """
+                        INSERT INTO school_work_progress (
+                            student_id, subject_name, workbook_name, completion_rate,
+                            completed_pages, target_pages, note, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            row["student_id"],
+                            progress["subject_name"],
+                            progress["workbook_name"],
+                            progress["completion_rate"],
+                            progress["completed_pages"],
+                            progress["target_pages"],
+                            progress.get("note", ""),
+                            progress.get("updated_at", now),
+                        ),
+                    )
                 for metric in build_seed_metrics(row["student_id"]):
                     conn.execute(
                         """
@@ -246,14 +313,99 @@ class Repository:
             for row in rows
         ]
 
+    def list_school_work_progress(self, student_id: str) -> list[SchoolWorkProgressItem]:
+        with get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT * FROM school_work_progress
+                WHERE student_id = ?
+                ORDER BY subject_name, progress_id
+                """,
+                (student_id,),
+            ).fetchall()
+        return [
+            SchoolWorkProgressItem(
+                progress_id=row["progress_id"],
+                student_id=row["student_id"],
+                subject_name=row["subject_name"],
+                workbook_name=row["workbook_name"],
+                completion_rate=row["completion_rate"],
+                completed_pages=row["completed_pages"],
+                target_pages=row["target_pages"],
+                note=row["note"],
+                updated_at=row["updated_at"],
+            )
+            for row in rows
+        ]
+
+    def upsert_school_work_progress(self, student_id: str, payload: SchoolWorkProgressUpdateRequest) -> SchoolWorkProgressItem:
+        now = datetime.now(timezone.utc).isoformat()
+        with get_connection() as conn:
+            existing = conn.execute(
+                """
+                SELECT progress_id FROM school_work_progress
+                WHERE student_id = ? AND subject_name = ? AND workbook_name = ?
+                ORDER BY progress_id DESC LIMIT 1
+                """,
+                (student_id, payload.subject_name, payload.workbook_name),
+            ).fetchone()
+            if existing:
+                conn.execute(
+                    """
+                    UPDATE school_work_progress
+                    SET completion_rate = ?, completed_pages = ?, target_pages = ?, note = ?, updated_at = ?
+                    WHERE progress_id = ?
+                    """,
+                    (
+                        payload.completion_rate,
+                        payload.completed_pages,
+                        payload.target_pages,
+                        payload.note,
+                        now,
+                        existing["progress_id"],
+                    ),
+                )
+                row = conn.execute("SELECT * FROM school_work_progress WHERE progress_id = ?", (existing["progress_id"],)).fetchone()
+            else:
+                cursor = conn.execute(
+                    """
+                    INSERT INTO school_work_progress (
+                        student_id, subject_name, workbook_name, completion_rate,
+                        completed_pages, target_pages, note, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        student_id,
+                        payload.subject_name,
+                        payload.workbook_name,
+                        payload.completion_rate,
+                        payload.completed_pages,
+                        payload.target_pages,
+                        payload.note,
+                        now,
+                    ),
+                )
+                row = conn.execute("SELECT * FROM school_work_progress WHERE progress_id = ?", (cursor.lastrowid,)).fetchone()
+        return SchoolWorkProgressItem(
+            progress_id=row["progress_id"],
+            student_id=row["student_id"],
+            subject_name=row["subject_name"],
+            workbook_name=row["workbook_name"],
+            completion_rate=row["completion_rate"],
+            completed_pages=row["completed_pages"],
+            target_pages=row["target_pages"],
+            note=row["note"],
+            updated_at=row["updated_at"],
+        )
+
     def save_student_summary(self, summary: StudentStateSummary, generation_mode: str = "manual") -> StudentStateSummary:
         with get_connection() as conn:
             conn.execute(
                 """
                 INSERT INTO student_state_snapshots (
                     student_id, current_status, risk_signals, next_best_actions, recommended_response,
-                    one_line_analysis, recommended_action, cited_document_titles, generated_at, generation_mode, fallback_used
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    one_line_analysis, recommended_action, cited_document_titles, source_rankings, generated_at, generation_mode, fallback_used
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     summary.student_id,
@@ -264,6 +416,7 @@ class Repository:
                     summary.one_line_analysis,
                     summary.recommended_action,
                     json.dumps(summary.cited_document_titles, ensure_ascii=False),
+                    json.dumps([item.model_dump() for item in summary.source_rankings], ensure_ascii=False),
                     summary.generated_at.isoformat(),
                     generation_mode,
                     1 if summary.fallback_used else 0,
@@ -293,6 +446,11 @@ class Repository:
             one_line_analysis=row["one_line_analysis"],
             recommended_action=row["recommended_action"],
             cited_document_titles=json.loads(row["cited_document_titles"]),
+            source_rankings=[SummarySourceRanking.model_validate(item) for item in json.loads(row["source_rankings"])],
+            current_status_sources=[f"{item['rank']}位 {item['title']}" for item in json.loads(row["source_rankings"]) if "current_status" in item["used_for"]][:3],
+            risk_signal_sources=[f"{item['rank']}位 {item['title']}" for item in json.loads(row["source_rankings"]) if "risk_signals" in item["used_for"]][:3],
+            next_best_action_sources=[f"{item['rank']}位 {item['title']}" for item in json.loads(row["source_rankings"]) if "next_best_actions" in item["used_for"]][:3],
+            recommended_response_sources=[f"{item['rank']}位 {item['title']}" for item in json.loads(row["source_rankings"]) if "recommended_response" in item["used_for"]][:3],
             generated_at=row["generated_at"],
             fallback_used=bool(row["fallback_used"]),
         )
@@ -401,6 +559,10 @@ class Repository:
                 student_id=student.student_id,
                 display_name=student.display_name,
                 grade=student.grade,
+                class_name=student.class_name,
+                school_name=student.school_name,
+                next_regular_exam_date=student.next_regular_exam_date,
+                days_until_regular_exam=student.days_until_regular_exam,
                 target_level=student.target_level,
                 attention_level=student.attention_level,
                 homework_completion_rate=int(student.homework_completion_rate or 0),
@@ -450,6 +612,10 @@ class Repository:
             student_id=row["student_id"],
             display_name=row["display_name"],
             grade=row["grade"],
+            class_name=row["class_name"],
+            school_name=row["school_name"],
+            next_regular_exam_date=row["next_regular_exam_date"],
+            days_until_regular_exam=self._days_until_exam(row["next_regular_exam_date"]),
             target_level=row["target_level"],
             persona_summary=row["persona_summary"],
             recent_scores=json.loads(row["recent_scores"]),
@@ -462,6 +628,13 @@ class Repository:
             recommended_action=row["recommended_action"],
             latest_summary_generated_at=row["latest_summary_generated_at"],
         )
+
+    def _days_until_exam(self, exam_date: str | None) -> int | None:
+        if not exam_date:
+            return None
+        exam = datetime.fromisoformat(exam_date)
+        today = datetime.now(timezone.utc).date()
+        return (exam.date() - today).days
 
     def _row_to_document(self, row) -> StudentDocumentResponse:
         return StudentDocumentResponse(

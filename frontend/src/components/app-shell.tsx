@@ -6,9 +6,9 @@ import { useDemo } from '../lib/demo-context'
 const steps = [
   { to: '/students', label: '生徒一覧' },
   { to: '/upload', label: 'アップロード' },
-  { to: '/ocr-review', label: 'OCR確認' },
+  { to: '/ocr-review', label: '回答確認' },
   { to: '/analysis', label: '分析' },
-  { to: '/homework-review', label: '宿題承認' }
+  { to: '/homework-review', label: '宿題提案' }
 ]
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -18,10 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-frame">
       <header className="hero-bar">
         <div className="hero-copy">
-          <p className="wordmark">生徒別学習コンパス</p>
-        </div>
-        <div className="hero-status">
-          {session.student ? <span className="student-chip">{session.student.display_name}</span> : <span className="student-chip subtle">生徒を選択</span>}
+          <p className="wordmark">school admin system</p>
         </div>
       </header>
       <nav className="step-nav">

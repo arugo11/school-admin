@@ -65,3 +65,15 @@
 - Evidence: `npm test` returned `sh: 1: vitest: not found`; `npm run build` returned `sh: 1: tsc: not found`.
 - Current root-cause hypothesis: this worktree has no local `frontend/node_modules`, so script-local binaries are missing.
 - Next changed approach: install frontend dependencies inside the worktree and rerun test/build there.
+
+## 2026-03-16 Student summary live generation throttle
+- What failed: `scripts/reset_student_demo_data.py` hit two consecutive `429 Too Many Requests` responses while regenerating summaries through Azure OpenAI.
+- Evidence: console output showed `AOAI chat HTTP error: attempt=1 status=429` and `attempt=2 status=429`, each followed by a `30.0s` retry.
+- Current root-cause hypothesis: the existing `sit-copilot-demo-chat` deployment is shared and cannot absorb six back-to-back summary generations during local iteration.
+- Next changed approach: keep the LLM+RAG path enabled with deterministic fallback, and prefer single-student refreshes instead of repeated bulk resets during development.
+
+## 2026-03-16 Demo reset after school metadata update
+- What failed: `scripts/reset_student_demo_data.py` again hit two consecutive `429 Too Many Requests` responses while trying to regenerate all six student summaries.
+- Evidence: local reset output repeated `AOAI chat HTTP error: attempt=1 status=429` and `AOAI chat retrying after 30.0s` twice in the same reset run.
+- Current root-cause hypothesis: bulk reset is still pushing six sequential summary generations to the shared AOAI deployment, so the retry budget is spent before the reset finishes.
+- Next changed approach: stop the live reset loop, switch the reset script to deterministic fallback summaries for bulk seed refresh, and keep live LLM generation only for manual per-student refresh in the UI.
