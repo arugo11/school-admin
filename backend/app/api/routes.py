@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import mimetypes
 import logging
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -117,6 +118,15 @@ def get_catalog() -> list[dict]:
     return [problem.model_dump() for problem in load_catalog()]
 
 
+@router.get("/demo/{student_id}/replay")
+def get_replay_snapshot(student_id: str) -> dict:
+    _find_student(student_id)
+    replay_path = settings.data_dir / "replays" / f"{student_id}.json"
+    if not replay_path.exists():
+        raise HTTPException(status_code=404, detail="Replay snapshot not found for this student")
+    return json.loads(replay_path.read_text())
+
+
 @router.post("/uploads")
 async def upload_file(student_id: str = Form(...), file: UploadFile = File(...)) -> dict:
     _find_student(student_id)
@@ -223,7 +233,7 @@ async def run_analysis(request: AnalysisRunRequest) -> dict:
     started = datetime.now(timezone.utc)
     student = _find_student(request.student_id)
     catalog = load_catalog()
-    analysis = await analysis_service.run(student, request.normalized_ocr, catalog, action=request.action)
+    analysis = await analysis_service.run(student, request.normalized_ocr, catalog, mode=request.mode, action=request.action)
     logger.info(
         "Analysis timing: student_id=%s mode=%s elapsed_ms=%.1f",
         request.student_id,
@@ -246,6 +256,7 @@ async def regrade_problem(request: ProblemRegradeRequest) -> dict:
             _find_student(request.student_id),
             request.normalized_ocr,
             catalog,
+            mode="live",
             action="initial",
         )
     try:

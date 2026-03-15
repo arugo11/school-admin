@@ -9,6 +9,7 @@ class Settings:
         repo_root = Path(__file__).resolve().parents[3]
         self.repo_root = repo_root
         self.data_dir = Path(os.getenv("APP_DATA_DIR", repo_root / "data")).resolve()
+        self.frontend_dist_dir = Path(os.getenv("FRONTEND_DIST_DIR", repo_root / "frontend" / "dist")).resolve()
         self.upload_dir = self.data_dir / "uploads"
         self.ocr_debug_dir = self.data_dir / "ocr_debug"
         self.database_path = self.data_dir / "school_admin.sqlite3"
@@ -18,6 +19,7 @@ class Settings:
         self.azure_openai_key = os.getenv("AZURE_OPENAI_KEY")
         self.azure_openai_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "sit-copilot-demo-chat")
         self.azure_openai_api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
+        self.azure_analysis_live_enabled = os.getenv("AZURE_ANALYSIS_LIVE_ENABLED", "false").lower() == "true"
         self.request_timeout_seconds = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "20"))
         self.vision_poll_seconds = float(os.getenv("VISION_POLL_SECONDS", "1.5"))
 

@@ -12,3 +12,10 @@
 - Chose `HTML + KaTeX + Playwright` with system `google-chrome` for printable math PDF rendering.
 - Split the generated paper into question pages plus a final OCR-friendly answer-sheet page.
 - Used `test_id` printed on paper and extracted by OCR so analysis can look up `manifest.json`.
+
+## 2026-03-16
+- Added `azure_local_live_env.sh` so local live mode can be recreated from Azure CLI without hand-copying keys.
+- Added a browser E2E script for the real happy path using `data/test/confirmation_test-3.jpg`.
+- Switched the public deploy target from `static website + container app` to `single Azure Container App` because `az storage` and new managed-environment creation were blocked in this subscription.
+- Reused the existing `sit-copilot-env` Container Apps environment after hitting the regional environment quota in Japan East.
+- Served the built React app from FastAPI in the container image and moved frontend build assets to `/app-assets` to avoid conflicting with backend `/assets`.

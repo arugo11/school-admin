@@ -101,6 +101,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-az-cli', action='store_true')
     parser.add_argument('--write-doc', default='')
+    parser.add_argument('--api-base-url', default='')
     args = parser.parse_args()
 
     env = _load_env(args.use_az_cli)
@@ -117,6 +118,16 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001
         status, elapsed, note = 'fail', 0.0, str(exc)
     rows.append(('Azure OpenAI', status, elapsed, note))
+
+    if args.api_base_url:
+        started = time.perf_counter()
+        try:
+            response = httpx.get(args.api_base_url.rstrip('/') + '/api/health', timeout=20)
+            response.raise_for_status()
+            payload = response.json()
+            rows.append(('Public API /api/health', 'pass', time.perf_counter() - started, json.dumps(payload, ensure_ascii=False)))
+        except Exception as exc:  # noqa: BLE001
+            rows.append(('Public API /api/health', 'fail', 0.0, str(exc)))
 
     markdown = ['# Azure Smoke Check', '', f'Date: {time.strftime("%Y-%m-%d %H:%M:%S")}', '', '| Check | Status | Latency | Note |', '| --- | --- | --- | --- |']
     for name, status, elapsed, note in rows:

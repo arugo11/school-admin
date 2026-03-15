@@ -1,6 +1,6 @@
 import type { AnalysisResult, HomeworkApproval, NormalizedOcr, ProblemRegradeResponse, StudentProfile, UploadResponse } from './types'
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
 export function resolveAssetUrl(storedPath?: string | null): string | undefined {
   if (!storedPath) return undefined
