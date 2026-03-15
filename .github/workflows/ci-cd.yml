@@ -7,6 +7,9 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: school-admin-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -108,11 +111,26 @@ jobs:
         working-directory: frontend
 
       - name: Azure Login
+        if: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure Login (Fallback Credentials JSON)
+        if: ${{ !(secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '') && secrets.AZURE_CREDENTIALS != '' }}
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Validate Azure Login Secret Configuration
+        if: ${{ secrets.AZURE_CREDENTIALS == '' && (secrets.AZURE_CLIENT_ID == '' || secrets.AZURE_TENANT_ID == '' || secrets.AZURE_SUBSCRIPTION_ID == '') }}
+        run: |
+          echo "Missing Azure login secrets. Configure either:"
+          echo "  1) AZURE_CLIENT_ID + AZURE_TENANT_ID + AZURE_SUBSCRIPTION_ID (OIDC), or"
+          echo "  2) AZURE_CREDENTIALS (service principal JSON)."
+          exit 1
 
       - name: Ensure Container Apps Extension
         run: az extension add --name containerapp --upgrade --yes
