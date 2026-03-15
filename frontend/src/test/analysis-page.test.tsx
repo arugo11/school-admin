@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   regradeProblem: vi.fn(),
   runAnalysis: vi.fn(),
+  fetchRagHomeworkRecommendation: vi.fn(),
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -76,10 +77,27 @@ vi.mock('../lib/demo-context', () => ({
 vi.mock('../lib/api', () => ({
   runAnalysis: mocks.runAnalysis,
   regradeProblem: mocks.regradeProblem,
+  fetchRagHomeworkRecommendation: mocks.fetchRagHomeworkRecommendation,
 }))
 
 describe('AnalysisPage', () => {
   it('renders problem feedback and submits regrade', async () => {
+    mocks.fetchRagHomeworkRecommendation.mockResolvedValue({
+      student_id: 's-03',
+      recommended_problem_groups: [
+        {
+          group_id: 'A-03',
+          unit_name: '一次方程式',
+          difficulty: 'standard',
+          reason: '分配法則の復習',
+          level_fit_comment: '標準帯で妥当',
+          supporting_note: '短く出す',
+          cited_document_titles: ['a', 'b', 'c'],
+          fallback_used: false,
+        },
+      ],
+      fallback_used: false,
+    })
     mocks.regradeProblem.mockResolvedValue({
       problem_feedback: {
         problem_no: 'Q1',

@@ -11,11 +11,23 @@ import httpx
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.core.config import settings
-from app.schemas import AnalysisRunRequest, HomeworkApproval, OcrNormalizeRequest, OcrRunRequest, ProblemRegradeRequest, ProblemRegradeResponse, UploadResponse
+from app.schemas import (
+    AnalysisRunRequest,
+    HomeworkApproval,
+    OcrNormalizeRequest,
+    OcrRunRequest,
+    ProblemRegradeRequest,
+    ProblemRegradeResponse,
+    RagHomeworkRequest,
+    StudentDocumentCreateRequest,
+    StudentOverviewResponse,
+    UploadResponse,
+)
 from app.services.analysis import AnalysisService
 from app.services.data_store import load_catalog, load_students
 from app.services.llm_sheet_ocr import extract_llm_ocr_document
 from app.services.ocr_normalizer import build_ocr_debug_artifact, normalize_ocr_result, persist_ocr_debug_artifact
+from app.services.student_summary import build_fallback_summary, build_rag_homework_recommendation
 from app.storage.repository import Repository
 
 router = APIRouter(prefix="/api")
@@ -25,10 +37,23 @@ analysis_service = AnalysisService()
 
 
 def _find_student(student_id: str):
-    for student in load_students():
-        if student.student_id == student_id:
-            return student
+    student = repo.get_student(student_id)
+    if student is not None:
+        return student
     raise HTTPException(status_code=404, detail="Student not found")
+
+
+def _refresh_summary(student_id: str, generation_mode: str = "manual") -> dict:
+    student = _find_student(student_id)
+    metrics = repo.list_student_metrics(student_id)
+    documents = repo.list_student_documents(student_id)
+    if not documents:
+        raise HTTPException(status_code=404, detail="Student documents not found")
+    query = " ".join(student.weakness_history + [student.persona_summary])
+    chunks = repo.search_rag_chunks(student_id, query, limit=8)
+    summary = build_fallback_summary(student, metrics, chunks, documents)
+    repo.save_student_summary(summary, generation_mode=generation_mode)
+    return summary.model_dump(mode="json")
 
 
 def _resolve_upload_path(source_image_id: str) -> Path:
@@ -108,9 +133,62 @@ def get_students() -> list[dict]:
     return [student.model_dump() for student in load_students()]
 
 
+@router.get("/students/overview")
+def get_students_overview() -> dict:
+    items = repo.build_overview_items()
+    if not all(item.one_line_analysis for item in items):
+        for student in load_students():
+            if repo.get_latest_student_summary(student.student_id) is None:
+                _refresh_summary(student.student_id, generation_mode="bootstrap")
+        items = repo.build_overview_items()
+    payload = StudentOverviewResponse(
+        total_students=len(items),
+        urgent_count=sum(1 for item in items if item.attention_level in {"high", "urgent"}),
+        low_completion_count=sum(1 for item in items if item.homework_completion_rate < 60),
+        counseling_priority_count=sum(1 for item in items if item.attention_level == "urgent"),
+        recommended_actions_today=sum(1 for item in items if item.recommended_action),
+        students=items,
+    )
+    return payload.model_dump()
+
+
 @router.get("/students/{student_id}")
 def get_student(student_id: str) -> dict:
     return _find_student(student_id).model_dump()
+
+
+@router.get("/students/{student_id}/summary")
+def get_student_summary(student_id: str) -> dict:
+    _find_student(student_id)
+    summary = repo.get_latest_student_summary(student_id)
+    if summary is None:
+        return _refresh_summary(student_id, generation_mode="bootstrap")
+    return summary.model_dump(mode="json")
+
+
+@router.post("/students/{student_id}/refresh-summary")
+def refresh_student_summary(student_id: str) -> dict:
+    return _refresh_summary(student_id, generation_mode="manual")
+
+
+@router.get("/students/{student_id}/documents")
+def get_student_documents(student_id: str) -> list[dict]:
+    _find_student(student_id)
+    return [document.model_dump(mode="json") for document in repo.list_student_documents(student_id)]
+
+
+@router.post("/students/{student_id}/documents")
+def create_student_document(student_id: str, payload: StudentDocumentCreateRequest) -> dict:
+    _find_student(student_id)
+    document = repo.add_student_document(student_id, payload)
+    _refresh_summary(student_id, generation_mode="document_update")
+    return document.model_dump(mode="json")
+
+
+@router.get("/students/{student_id}/homework-history")
+def get_student_homework_history(student_id: str) -> list[dict]:
+    _find_student(student_id)
+    return [item.model_dump(mode="json") for item in repo.list_homework_history(student_id)]
 
 
 @router.get("/catalog")
@@ -278,3 +356,27 @@ async def regrade_problem(request: ProblemRegradeRequest) -> dict:
 def approve_homework(payload: HomeworkApproval) -> dict:
     approval = repo.save_approval(payload)
     return approval.model_dump(mode="json")
+
+
+@router.post("/homework/rag-recommend")
+async def rag_recommend_homework(payload: RagHomeworkRequest) -> dict:
+    student = _find_student(payload.student_id)
+    summary = repo.get_latest_student_summary(payload.student_id)
+    if summary is None:
+        summary = build_fallback_summary(
+            student,
+            repo.list_student_metrics(payload.student_id),
+            repo.search_rag_chunks(payload.student_id, " ".join(student.weakness_history), limit=8),
+            repo.list_student_documents(payload.student_id),
+        )
+        repo.save_student_summary(summary, generation_mode="rag-homework")
+    recommendation = build_rag_homework_recommendation(
+        student=student,
+        metrics=repo.list_student_metrics(payload.student_id),
+        summary=summary,
+        homework_history=repo.list_homework_history(payload.student_id),
+        catalog=load_catalog(),
+        analysis=payload.analysis,
+        normalized_ocr=payload.normalized_ocr,
+    )
+    return recommendation.model_dump(mode="json")

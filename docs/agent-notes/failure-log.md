@@ -53,3 +53,15 @@
 - Evidence: full-precision load hit CUDA OOM during `.to(torch.bfloat16)`; 8bit quantized run progressed further but failed inside bitsandbytes with `RuntimeError: Only two or three dimensional matrices are supported for argument A` during the vision branch.
 - Current root-cause hypothesis: the model can fit only with offload/quantization on this GPU, but the current bitsandbytes path is incompatible with DeepSeek-OCR's vision encoder execution.
 - Next changed approach: try a CPU-offload / mixed placement run to evaluate stability and latency without relying on the broken 8bit path.
+
+## 2026-03-16 Student RAG worktree backend validation bootstrap
+- What failed: focused pytest and `refresh_student_summaries.py` both failed immediately with `/bin/bash: .venv/bin/activate: No such file or directory`.
+- Evidence: the new worktree does not contain its own `.venv`; the existing virtualenv is only present under `/home/argo/school-admin/.venv`.
+- Current root-cause hypothesis: validation commands inherited the original repo path assumption and did not account for git worktree layout.
+- Next changed approach: activate `/home/argo/school-admin/.venv/bin/activate` explicitly when running Python checks from the worktree.
+
+## 2026-03-16 Student RAG worktree frontend validation bootstrap
+- What failed: `frontend` validation failed immediately because `vitest` and `tsc` were not found.
+- Evidence: `npm test` returned `sh: 1: vitest: not found`; `npm run build` returned `sh: 1: tsc: not found`.
+- Current root-cause hypothesis: this worktree has no local `frontend/node_modules`, so script-local binaries are missing.
+- Next changed approach: install frontend dependencies inside the worktree and rerun test/build there.

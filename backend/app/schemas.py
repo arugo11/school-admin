@@ -17,6 +17,10 @@ class StudentProfile(BaseModel):
     weakness_history: list[str]
     preferred_difficulty: str
     attention_level: Literal["low", "medium", "high", "urgent"] = "medium"
+    homework_completion_rate: int | None = None
+    one_line_analysis: str | None = None
+    recommended_action: str | None = None
+    latest_summary_generated_at: datetime | None = None
 
 
 class CatalogProblem(BaseModel):
@@ -107,6 +111,8 @@ class AnalysisResult(BaseModel):
     fallback_used: bool = False
     source_mode: Literal["live", "replay"] = "live"
     problem_feedback: list[ProblemFeedback] = Field(default_factory=list)
+    rag_context_used: bool = False
+    rag_cited_document_titles: list[str] = Field(default_factory=list)
 
 
 class HomeworkApproval(BaseModel):
@@ -239,3 +245,121 @@ class ConfirmationPerformanceSummary(BaseModel):
     missed_subjects: list[str]
     missed_catalog_problem_nos: list[str]
     items: list[ConfirmationPerformanceItem]
+
+
+DocumentType = Literal[
+    "test_report",
+    "score_trend",
+    "homework_history",
+    "counseling_memo",
+    "teacher_note",
+    "attendance",
+    "mock_exam",
+]
+
+
+class StudentMetric(BaseModel):
+    metric_type: str
+    metric_value: float
+    metric_date: datetime
+
+
+class StudentDocumentCreateRequest(BaseModel):
+    document_type: DocumentType
+    title: str
+    body_text: str
+    source_system: str = "manual"
+    authored_by: str = "teacher"
+    document_date: datetime
+
+
+class StudentDocumentResponse(StudentDocumentCreateRequest):
+    document_id: int
+    student_id: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class StudentHomeworkHistoryItem(BaseModel):
+    homework_id: int
+    student_id: str
+    assigned_date: datetime
+    approved_problem_groups: list[str]
+    expected_load: str
+    completion_status: str
+    teacher_comment: str
+    created_at: datetime
+
+
+class StudentStateSummary(BaseModel):
+    student_id: str
+    current_status: str
+    risk_signals: list[str]
+    next_best_actions: list[str]
+    recommended_response: str
+    one_line_analysis: str
+    recommended_action: str
+    cited_document_titles: list[str]
+    generated_at: datetime
+    fallback_used: bool = False
+
+    @field_validator("cited_document_titles")
+    @classmethod
+    def validate_cited_titles(cls, value: list[str]) -> list[str]:
+        if len(value) < 3:
+            raise ValueError("cited_document_titles must contain at least 3 items")
+        return value[:3]
+
+
+class StudentOverviewItem(BaseModel):
+    student_id: str
+    display_name: str
+    grade: str
+    target_level: str
+    attention_level: Literal["low", "medium", "high", "urgent"]
+    homework_completion_rate: int
+    one_line_analysis: str
+    recommended_action: str
+
+
+class StudentOverviewResponse(BaseModel):
+    total_students: int
+    urgent_count: int
+    low_completion_count: int
+    counseling_priority_count: int
+    recommended_actions_today: int
+    students: list[StudentOverviewItem]
+
+
+class RagChunkSearchResult(BaseModel):
+    chunk_id: int
+    document_id: int
+    student_id: str
+    title: str
+    document_type: DocumentType
+    document_date: datetime
+    chunk_text: str
+    score: float
+
+
+class RecommendedProblemGroup(BaseModel):
+    group_id: str
+    unit_name: str
+    difficulty: Literal["basic", "standard", "advanced"]
+    reason: str
+    level_fit_comment: str
+    supporting_note: str
+    cited_document_titles: list[str]
+    fallback_used: bool = False
+
+
+class RagHomeworkRecommendation(BaseModel):
+    student_id: str
+    recommended_problem_groups: list[RecommendedProblemGroup]
+    fallback_used: bool = False
+
+
+class RagHomeworkRequest(BaseModel):
+    student_id: str
+    normalized_ocr: NormalizedOcrDocument
+    analysis: AnalysisResult | None = None

@@ -1,7 +1,16 @@
-import type { StudentProfile } from '../lib/types'
+import type { StudentOverviewItem } from '../lib/types'
 
-export function StudentCard({ student, onSelect }: { student: StudentProfile; onSelect: (student: StudentProfile) => void }) {
-  const avg = Math.round(student.recent_scores.reduce((sum, value) => sum + value, 0) / student.recent_scores.length)
+export function StudentCard({
+  student,
+  active,
+  onSelect,
+  onStartFlow,
+}: {
+  student: StudentOverviewItem
+  active: boolean
+  onSelect: (student: StudentOverviewItem) => void
+  onStartFlow: (student: StudentOverviewItem) => void
+}) {
   const attentionLabel = {
     low: '安定',
     medium: '通常',
@@ -10,24 +19,30 @@ export function StudentCard({ student, onSelect }: { student: StudentProfile; on
   }[student.attention_level]
 
   return (
-    <button className="student-card" onClick={() => onSelect(student)}>
-      <div className="student-card-header">
-        <div>
-          <p className="student-name">{student.display_name}</p>
-          <p className="student-grade">{student.grade} / {student.target_level}</p>
+    <article className={active ? 'student-card active-card' : 'student-card'}>
+      <button className="student-card-select" onClick={() => onSelect(student)}>
+        <div className="student-card-header">
+          <div>
+            <p className="student-name">{student.display_name}</p>
+            <p className="student-grade">{student.grade} / {student.target_level}</p>
+          </div>
+          <span className={`attention-pill ${student.attention_level}`}>{attentionLabel}</span>
         </div>
-        <span className={`attention-pill ${student.attention_level}`}>{attentionLabel}</span>
-      </div>
-      <div className="student-metrics">
-        <div>
-          <span>平均点</span>
-          <strong>{avg}</strong>
+        <div className="student-metrics">
+          <div>
+            <span>宿題達成率</span>
+            <strong>{student.homework_completion_rate}%</strong>
+          </div>
+          <div>
+            <span>推奨対応</span>
+            <strong>{student.recommended_action}</strong>
+          </div>
         </div>
-        <div>
-          <span>優先課題</span>
-          <strong>{student.weakness_history[0] ?? '確認中'}</strong>
-        </div>
-      </div>
-    </button>
+        <p className="student-summary">{student.one_line_analysis}</p>
+      </button>
+      <button className="secondary-btn compact-btn" onClick={() => onStartFlow(student)}>
+        この生徒で答案確認へ
+      </button>
+    </article>
   )
 }
