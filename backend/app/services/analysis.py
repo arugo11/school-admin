@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.clients.azure_openai import AzureOpenAIClient
+from app.core.config import settings
 from app.schemas import AnalysisResult, CatalogProblem, NormalizedOcrDocument, ProblemFeedback, StudentProfile
 from app.services.confirmation_tests import apply_problem_regrade, build_problem_feedback, manifest_context_for_analysis
 from app.services.homework import constrain_to_catalog, recommend_by_rules
@@ -42,6 +43,7 @@ class AnalysisService:
         student: StudentProfile,
         normalized_ocr: NormalizedOcrDocument,
         catalog: list[CatalogProblem],
+        mode: str = "live",
         action: str = "initial",
     ) -> AnalysisResult:
         manifest_context = manifest_context_for_analysis(normalized_ocr)
@@ -54,7 +56,7 @@ class AnalysisService:
                 lighten=True,
                 manifest_context=manifest_context,
             )
-            result.source_mode = "live"
+            result.source_mode = "replay" if mode == "replay" else "live"
             return self.enrich_result(constrain_to_catalog(result, catalog), normalized_ocr)
 
         payload = {
@@ -64,20 +66,23 @@ class AnalysisService:
             "action": action,
             "confirmation_test_context": manifest_context,
         }
-        try:
-            result = await self.client.analyze(SYSTEM_PROMPT, payload)
-            result.source_mode = "live"
-            return self.enrich_result(constrain_to_catalog(result, catalog), normalized_ocr)
-        except Exception:
-            result = recommend_by_rules(
-                student,
-                normalized_ocr,
-                catalog,
-                lighten=action == "lighten",
-                manifest_context=manifest_context,
-            )
-            result.source_mode = "live"
-            return self.enrich_result(constrain_to_catalog(result, catalog), normalized_ocr)
+        if mode == "live" and settings.azure_analysis_live_enabled:
+            try:
+                result = await self.client.analyze(SYSTEM_PROMPT, payload)
+                result.source_mode = "live"
+                return self.enrich_result(constrain_to_catalog(result, catalog), normalized_ocr)
+            except Exception:
+                pass
+
+        result = recommend_by_rules(
+            student,
+            normalized_ocr,
+            catalog,
+            lighten=action == "lighten",
+            manifest_context=manifest_context,
+        )
+        result.source_mode = "replay" if mode == "replay" else "live"
+        return self.enrich_result(constrain_to_catalog(result, catalog), normalized_ocr)
 
     def regrade_problem(
         self,

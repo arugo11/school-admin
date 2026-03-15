@@ -10,6 +10,13 @@ FRONTEND_LOG="$RUNTIME_DIR/frontend.log"
 
 mkdir -p "$RUNTIME_DIR"
 
+if [[ -f "$ROOT_DIR/.env.local" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$ROOT_DIR/.env.local"
+  set +a
+fi
+
 is_running() {
   local pid_file="$1"
   if [[ -f "$pid_file" ]]; then

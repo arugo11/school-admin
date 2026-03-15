@@ -25,6 +25,10 @@ cd frontend && npm install && cd ..
 ```bash
 cp .env.example .env.local
 ```
+Or generate live env from Azure CLI.
+```bash
+./scripts/azure_local_live_env.sh
+```
 4. Start backend.
 ```bash
 source .venv/bin/activate
@@ -62,6 +66,19 @@ PYTHONPATH=backend python scripts/e2e_demo_eval.py
 PYTHONPATH=backend python scripts/latency_eval.py
 PYTHONPATH=backend python scripts/failure_injection_eval.py
 PYTHONPATH=backend python scripts/azure_smoke_check.py --use-az-cli --write-doc docs/runlogs/azure_smoke_check.md
+```
+
+## Azure Deploy
+Deploy the web app with Azure CLI.
+```bash
+./scripts/azure_deploy_web.sh
+```
+The script prints a public URL backed by Azure Container Apps.
+
+Run browser E2E locally or against the deployed URL.
+```bash
+node scripts/e2e_browser_live.mjs
+E2E_BASE_URL=https://your-public-url node scripts/e2e_browser_live.mjs
 ```
 
 ## Key Paths

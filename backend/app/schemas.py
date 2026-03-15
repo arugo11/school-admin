@@ -105,7 +105,7 @@ class AnalysisResult(BaseModel):
     recommended_homework: list[HomeworkRecommendation]
     teacher_note: str
     fallback_used: bool = False
-    source_mode: Literal["live"] = "live"
+    source_mode: Literal["live", "replay"] = "live"
     problem_feedback: list[ProblemFeedback] = Field(default_factory=list)
 
 
@@ -122,7 +122,7 @@ class UploadResponse(BaseModel):
     source_image_id: str
     filename: str
     stored_path: str
-    source_mode: Literal["live"] = "live"
+    source_mode: Literal["live", "replay"] = "live"
 
 
 class OcrRunRequest(BaseModel):
@@ -147,6 +147,7 @@ class OcrNormalizeRequest(BaseModel):
 class AnalysisRunRequest(BaseModel):
     student_id: str
     normalized_ocr: NormalizedOcrDocument
+    mode: Literal["live", "replay"] = "live"
     action: Literal["initial", "regenerate", "lighten"] = "initial"
 
 

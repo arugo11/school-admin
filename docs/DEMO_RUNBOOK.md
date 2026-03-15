@@ -16,12 +16,34 @@ PYTHONPATH=backend python scripts/azure_smoke_check.py --use-az-cli --write-doc 
 
 ## Recommended Startup
 ```bash
+./scripts/azure_local_live_env.sh
+./scripts/start_demo.sh
+```
+
+Or run the servers manually.
+```bash
 source .venv/bin/activate
 PYTHONPATH=backend uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 ```bash
 cd frontend
 VITE_API_BASE=http://127.0.0.1:8000 npm run dev -- --host 0.0.0.0 --port 4173
+```
+
+## Public Deploy
+Deploy the same flow to Azure Container Apps.
+```bash
+./scripts/azure_deploy_web.sh
+```
+
+Current deployed URL:
+`https://school-admin-demo-api.grayground-578aed68.japaneast.azurecontainerapps.io`
+
+Public browser E2E:
+```bash
+E2E_BASE_URL=https://school-admin-demo-api.grayground-578aed68.japaneast.azurecontainerapps.io \
+E2E_ROUTE_TIMEOUT_MS=420000 \
+node scripts/e2e_browser_live.mjs
 ```
 
 ## Primary Demo Flow
@@ -66,3 +88,4 @@ Use this if OCR, network, or AOAI is unstable.
 - `docs/evals/latency_eval.md`
 - `docs/evals/failure_injection_eval.md`
 - `docs/runlogs/azure_smoke_check.md`
+- `docs/runlogs/azure_web_deploy_20260316.md`
