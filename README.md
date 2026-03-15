@@ -105,10 +105,13 @@ CD:
 - public health check
 - public browser E2E
 
-Required repository secrets:
-- `AZURE_CLIENT_ID`
-- `AZURE_TENANT_ID`
-- `AZURE_SUBSCRIPTION_ID`
+Required repository secrets (configure either option A or B):
+- Option A (OIDC):
+  - `AZURE_CLIENT_ID`
+  - `AZURE_TENANT_ID`
+  - `AZURE_SUBSCRIPTION_ID`
+- Option B (service principal JSON):
+  - `AZURE_CREDENTIALS`
 
 The Azure principal needs permission to:
 - push images to `schooladmindemoacr23088`
