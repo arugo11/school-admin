@@ -61,7 +61,7 @@ export function AnalysisPage() {
   return (
     <div className="page-grid">
       <div className="page-grid detail-layout">
-        <SectionCard title="読み取りと判定" subtitle="画像と各問題の判定根拠を並べて確認します。">
+        <SectionCard title="読み取りと判定">
           <div className="analysis-hero">
             <div className="image-stage">
               {session.previewUrl ? <img className="sheet-preview" src={session.previewUrl} alt="uploaded worksheet" /> : <div className="empty-state">画像プレビューはアップロード後に表示されます。</div>}
@@ -185,7 +185,7 @@ export function AnalysisPage() {
             <button className="primary-btn" onClick={() => navigate('/homework-review')}>宿題承認へ</button>
           </div>
         </SectionCard>
-        <SectionCard title="提案問題" subtitle="候補の問題番号と選定理由を確認します。">
+        <SectionCard title="提案問題">
           <div className="pill-row">
             <span className={`load-pill ${session.analysis.homework_load_fit}`}>{session.analysis.homework_load_fit}</span>
           </div>

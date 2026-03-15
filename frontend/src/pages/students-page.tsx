@@ -19,7 +19,7 @@ export function StudentsPage() {
 
   return (
     <div className="page-grid">
-      <SectionCard title="生徒一覧" subtitle="生徒を選択して答案の取り込みを開始します。">
+      <SectionCard title="生徒一覧">
         {error ? <div className="empty-state">{error}</div> : null}
         <div className="student-grid">
           {students.map((student) => (

@@ -44,18 +44,18 @@ export function UploadPage() {
 
   return (
     <div className="page-grid detail-layout">
-      <SectionCard title="答案を取り込む" subtitle={`${session.student.display_name} の答案画像を選択します。`}>
+      <SectionCard title="答案を取り込む">
         <div className="upload-studio">
           <div className="image-stage">
-            {session.previewUrl ? <img className="sheet-preview" src={session.previewUrl} alt="worksheet preview" /> : <div className="empty-state">画像を選択するとプレビューが表示されます。</div>}
+            {session.previewUrl ? <img className="sheet-preview" src={session.previewUrl} alt="worksheet preview" /> : <div className="empty-state">画像を選択してください。</div>}
           </div>
           <div className="upload-panel">
-            <p className="lead-copy">計算過程と最終解答が見える画像を選択してください。</p>
+            <p className="lead-copy">{session.student.display_name} の答案画像を選択します。</p>
             <label className="upload-label">
               <span>{busy ? '読み取り中...' : '画像を選ぶ / 撮る'}</span>
               <input type="file" accept="image/*,.svg,.pdf" multiple disabled={busy} onChange={(event) => onFileChange(event.target.files)} />
             </label>
-            <p className="muted">複数画像を選んだ場合は、まとめてOCRへ渡します。</p>
+            <p className="muted">複数枚も選択できます。</p>
           </div>
         </div>
         {error ? <div className="error-box">{error}</div> : null}
