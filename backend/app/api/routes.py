@@ -48,7 +48,6 @@ def _find_student(student_id: str):
     if student is not None:
         return student
     raise HTTPException(status_code=404, detail="Student not found")
-
 def _format_processing_error(exc: Exception) -> str:
     if isinstance(exc, httpx.HTTPStatusError):
         status_code = exc.response.status_code

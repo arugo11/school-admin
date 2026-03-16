@@ -18,6 +18,12 @@ SYSTEM_PROMPT = """
 - fallback_used: boolean
 - source_mode: "live"
 制約:
+- problem_feedback_seed を最優先の観測事実として参照する
+- problem_feedback_seed の grading_status を区別し, incorrect は誤答分析の主根拠, uncertain は断定を避けた補助根拠, correct は弱点推定の反証として使う
+- error_patterns は「答案上で観測された誤りの型」を具体的に返す。単なる科目名や抽象語だけにしない
+- analysis_rationale は短文で具体的に返し, 問題番号, 模範解答との差, OCRの不確実性, 確認テストの誤答数のいずれかを必ず含める
+- weak_units は confirmation_test_context の単元と problem_feedback_seed の内容を結びつけ, 同義反復を避ける
+- teacher_note は講師向けの短い運用メモだけを書く。声かけや宿題量の調整に触れてよい
 - OCRの不確実な箇所を断定しない
 - 教材カタログに存在する problem_no のみ使う
 - 数学の宿題は3〜5問相当を想定し、重すぎる場合は light に寄せる
@@ -65,6 +71,19 @@ class AnalysisService:
             "catalog": [problem.model_dump() for problem in catalog],
             "action": action,
             "confirmation_test_context": manifest_context,
+            "problem_feedback_seed": [
+                {
+                    "problem_no": item.problem_no,
+                    "grading_status": item.grading_status,
+                    "expected_answer": item.expected_answer,
+                    "recognized_answer": item.recognized_answer,
+                    "work_text": item.work_text,
+                    "final_answer": item.final_answer,
+                    "needs_review": item.needs_review,
+                    "comment": item.comment,
+                }
+                for item in build_problem_feedback(normalized_ocr)
+            ],
         }
         if mode == "live" and settings.azure_analysis_live_enabled:
             try:

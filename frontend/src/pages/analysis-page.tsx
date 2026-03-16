@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { fetchRagHomeworkRecommendation, regradeProblem, resolveAssetUrl, runAnalysis } from '../lib/api'
+import { MathText } from '../components/math-text'
 import { useDemo } from '../lib/demo-context'
 import { SectionCard } from '../components/section-card'
 import type { RecommendedProblemGroup, Recommendation } from '../lib/types'
@@ -98,17 +99,17 @@ export function AnalysisPage() {
             <div className="analysis-summary">
               {session.normalizedOcr.test_id ? <div className="banner compact">テストID: {session.normalizedOcr.test_id}</div> : null}
               <div className="pill-row">
-                {session.analysis.weak_units.map((item) => <span key={item} className="tag-pill">{item}</span>)}
+                {session.analysis.weak_units.map((item) => <span key={item} className="tag-pill"><MathText text={item} inline /></span>)}
               </div>
               <div className="analysis-grid single-column">
                 <div className="analysis-panel">
                   <h3>誤答パターン</h3>
-                  <ul>{session.analysis.error_patterns.map((item) => <li key={item}>{item}</li>)}</ul>
+                  <ul>{session.analysis.error_patterns.map((item) => <li key={item}><MathText text={item} /></li>)}</ul>
                 </div>
                 <div className="analysis-panel">
                   <h3>宿題負荷</h3>
                   <p className={`load-pill ${session.analysis.homework_load_fit}`}>{session.analysis.homework_load_fit}</p>
-                  <p>{session.analysis.teacher_note}</p>
+                  <MathText text={session.analysis.teacher_note} />
                 </div>
               </div>
             </div>
@@ -141,24 +142,24 @@ export function AnalysisPage() {
                   <div className="dual-stat-grid">
                     <div>
                       <span>計算過程</span>
-                      <strong>{item.work_text || '未抽出'}</strong>
+                      <strong><MathText text={item.work_text} fallback="未抽出" inline /></strong>
                     </div>
                     <div>
                       <span>最終解答</span>
-                      <strong>{item.final_answer || item.recognized_answer}</strong>
+                      <strong><MathText text={item.final_answer || item.recognized_answer} inline /></strong>
                     </div>
                   </div>
                   <div className="dual-stat-grid compact-grid">
                     <div>
                       <span>模範解答</span>
-                      <strong>{item.expected_answer}</strong>
+                      <strong><MathText text={item.expected_answer} inline /></strong>
                     </div>
                     <div>
                       <span>判定根拠</span>
-                      <strong>{item.grading_basis}</strong>
+                      <strong><MathText text={item.grading_basis} inline /></strong>
                     </div>
                   </div>
-                  <p>{item.comment}</p>
+                  <MathText text={item.comment} />
                   {item.regrade_requested ? <div className="banner compact">{item.regrade_outcome}</div> : null}
                   {item.regrade_available ? (
                     <>
@@ -201,7 +202,7 @@ export function AnalysisPage() {
           <div className="analysis-panel">
             <h3>分析メモ</h3>
             <ul className="plain-list">
-              {session.analysis.analysis_rationale.map((item) => <li key={item}>{item}</li>)}
+              {session.analysis.analysis_rationale.map((item) => <li key={item}><MathText text={item} /></li>)}
             </ul>
           </div>
           <div className="mode-actions">
@@ -224,8 +225,8 @@ export function AnalysisPage() {
               <div key={'group_id' in item ? item.group_id : item.problem_no} className="recommendation-card">
                 <strong>{'group_id' in item ? item.group_id : item.problem_no}</strong>
                 <span>{item.difficulty}</span>
-                <p>{item.reason}</p>
-                {'level_fit_comment' in item ? <small>{item.level_fit_comment}</small> : null}
+                <MathText text={item.reason} />
+                {'level_fit_comment' in item ? <small><MathText text={item.level_fit_comment} inline /></small> : null}
               </div>
             ))}
           </div>
