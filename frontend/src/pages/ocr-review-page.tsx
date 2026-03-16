@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { resolveAssetUrl, runAnalysis } from '../lib/api'
+import { MathText } from '../components/math-text'
 import { useDemo } from '../lib/demo-context'
 import { SectionCard } from '../components/section-card'
 
@@ -77,6 +78,10 @@ export function OcrReviewPage() {
                           }}
                           rows={3}
                         />
+                        <div className="math-preview-box">
+                          <span className="subtle-label">プレビュー</span>
+                          <MathText text={item.work_text} />
+                        </div>
                       </label>
                       <label>
                         最終解答
@@ -95,6 +100,10 @@ export function OcrReviewPage() {
                             setNormalizedOcr(next)
                           }}
                         />
+                        <div className="math-preview-box">
+                          <span className="subtle-label">プレビュー</span>
+                          <MathText text={item.final_answer ?? item.recognized_answer} inline />
+                        </div>
                       </label>
                     </div>
                   ) : (
@@ -107,9 +116,16 @@ export function OcrReviewPage() {
                           setNormalizedOcr(next)
                         }}
                       />
+                      <div className="math-preview-box">
+                        <span className="subtle-label">プレビュー</span>
+                        <MathText text={item.recognized_answer} inline />
+                      </div>
                     </label>
                   )}
-                  <p className="muted">{item.raw_text}</p>
+                  <div className="math-preview-box compact">
+                    <span className="subtle-label">OCR生テキスト</span>
+                    <MathText text={item.raw_text} />
+                  </div>
                   {item.uncertainty.length ? <div className="uncertainty-chip">{item.uncertainty.join(' / ')}</div> : null}
                 </div>
               ))}

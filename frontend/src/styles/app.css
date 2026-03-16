@@ -26,6 +26,8 @@ body { margin: 0; min-width: 320px; }
 button, input, textarea { font: inherit; }
 button { cursor: pointer; }
 img { display: block; max-width: 100%; }
+.katex { font-size: 1.04em; }
+.katex-display { margin: 0.35rem 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 0.1rem; }
 
 .app-frame {
   max-width: 1280px;
@@ -170,6 +172,27 @@ img { display: block; max-width: 100%; }
 
 .section-head p {
   margin: 4px 0 0;
+}
+
+.math-inline-text,
+.math-block-text {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.math-block-text {
+  display: grid;
+  gap: 6px;
+}
+
+.math-segment-inline {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.math-segment-block {
+  max-width: 100%;
 }
 
 .callout-row,
@@ -414,6 +437,20 @@ textarea {
 }
 
 textarea { resize: vertical; min-height: 96px; }
+
+.math-preview-box {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(248, 245, 239, 0.84);
+  border: 1px solid rgba(41, 56, 66, 0.1);
+  border-radius: 14px;
+}
+
+.math-preview-box.compact {
+  margin-top: 10px;
+}
 
 .analysis-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
