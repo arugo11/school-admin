@@ -142,7 +142,10 @@ CREATE TABLE IF NOT EXISTS processing_jobs (
     student_id TEXT NOT NULL,
     source_image_ids_json TEXT NOT NULL,
     status TEXT NOT NULL,
+    job_type TEXT NOT NULL DEFAULT 'confirmation_test_analysis',
+    current_stage TEXT NOT NULL DEFAULT 'queued',
     progress_message TEXT NOT NULL DEFAULT '',
+    notification_message TEXT,
     error_detail TEXT,
     result_document_id INTEGER,
     created_at TEXT NOT NULL,
@@ -172,4 +175,11 @@ def get_connection() -> sqlite3.Connection:
         conn.execute("ALTER TABLE student_documents ADD COLUMN asset_paths_json TEXT NOT NULL DEFAULT '[]'")
     if "payload_json" not in document_columns:
         conn.execute("ALTER TABLE student_documents ADD COLUMN payload_json TEXT")
+    processing_job_columns = {row["name"] for row in conn.execute("PRAGMA table_info(processing_jobs)").fetchall()}
+    if "job_type" not in processing_job_columns:
+        conn.execute("ALTER TABLE processing_jobs ADD COLUMN job_type TEXT NOT NULL DEFAULT 'confirmation_test_analysis'")
+    if "current_stage" not in processing_job_columns:
+        conn.execute("ALTER TABLE processing_jobs ADD COLUMN current_stage TEXT NOT NULL DEFAULT 'queued'")
+    if "notification_message" not in processing_job_columns:
+        conn.execute("ALTER TABLE processing_jobs ADD COLUMN notification_message TEXT")
     return conn

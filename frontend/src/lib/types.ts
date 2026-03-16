@@ -249,13 +249,17 @@ export type RagHomeworkRecommendation = {
 }
 
 export type ProcessingJobStatus = 'queued' | 'running' | 'succeeded' | 'failed'
+export type ProcessingJobStage = 'queued' | 'ocr' | 'analysis' | 'done' | 'failed'
 
 export type ProcessingJob = {
   job_id: string
   student_id: string
   source_image_ids: string[]
   status: ProcessingJobStatus
+  job_type: string
+  current_stage: ProcessingJobStage
   progress_message: string
+  notification_message?: string | null
   error_detail?: string | null
   result_document_id?: number | null
   created_at: string

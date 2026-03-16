@@ -355,6 +355,26 @@ def test_ocr_run_returns_503_when_llm_ocr_is_rate_limited(monkeypatch) -> None:
     assert "temporarily busy" in response.json()["detail"]
 
 
+def test_ocr_run_returns_503_when_network_resolution_fails(monkeypatch) -> None:
+    upload = client.post(
+        "/api/uploads",
+        data={"student_id": "s-03", "mode": "live"},
+        files={"file": ("sheet.png", BytesIO(b"fake-image"), "image/png")},
+    ).json()
+
+    async def fake_extract_llm_ocr_document(**kwargs):
+        request = httpx.Request("POST", "https://example.invalid")
+        raise httpx.ConnectError("[Errno -3] Temporary failure in name resolution", request=request)
+
+    monkeypatch.setattr(routes, "extract_llm_ocr_document", fake_extract_llm_ocr_document)
+    response = client.post(
+        "/api/ocr/run",
+        json={"student_id": "s-03", "source_image_id": upload["source_image_id"], "mode": "live"},
+    )
+    assert response.status_code == 503
+    assert response.json()["detail"] == "ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。"
+
+
 def test_analysis_enqueue_creates_job_and_persists_test_report(monkeypatch) -> None:
     upload = client.post(
         "/api/uploads",
@@ -412,6 +432,7 @@ def test_analysis_enqueue_creates_job_and_persists_test_report(monkeypatch) -> N
     assert queued.status_code == 200
     job_id = queued.json()["job_id"]
     assert queued.json()["status"] == "queued"
+    assert queued.json()["current_stage"] == "queued"
 
     latest = None
     for _ in range(60):
@@ -422,7 +443,9 @@ def test_analysis_enqueue_creates_job_and_persists_test_report(monkeypatch) -> N
         time.sleep(0.1)
     assert latest is not None
     assert latest.json()["status"] == "succeeded"
+    assert latest.json()["current_stage"] == "done"
     assert latest.json()["result_document_id"] is not None
+    assert latest.json()["notification_message"] == "分析済みに確認テストが追加されました"
 
     documents = client.get("/api/students/s-03/documents").json()
     test_report = next(item for item in documents if item["document_id"] == latest.json()["result_document_id"])
@@ -461,3 +484,98 @@ def test_analysis_enqueue_marks_failed_when_background_job_errors(monkeypatch) -
     assert latest is not None
     assert latest.json()["status"] == "failed"
     assert "simulated background failure" in latest.json()["error_detail"]
+
+
+def test_analysis_enqueue_sanitizes_azure_500_error(monkeypatch) -> None:
+    upload = client.post(
+        "/api/uploads",
+        data={"student_id": "s-03"},
+        files={"file": ("sheet.png", BytesIO(b"fake-image"), "image/png")},
+    ).json()
+
+    async def fake_extract_llm_ocr_document(**_kwargs):
+        request = httpx.Request("POST", "https://example.invalid")
+        response = httpx.Response(500, request=request)
+        raise httpx.HTTPStatusError("server error", request=request, response=response)
+
+    monkeypatch.setattr(routes, "extract_llm_ocr_document", fake_extract_llm_ocr_document)
+
+    queued = client.post(
+        "/api/analysis/enqueue",
+        json={"student_id": "s-03", "source_image_id": upload["source_image_id"]},
+    )
+    assert queued.status_code == 200
+    job_id = queued.json()["job_id"]
+
+    latest = None
+    for _ in range(30):
+        latest = client.get(f"/api/analysis/jobs/{job_id}")
+        assert latest.status_code == 200
+        if latest.json()["status"] in {"succeeded", "failed"}:
+            break
+        time.sleep(0.1)
+    assert latest is not None
+    assert latest.json()["status"] == "failed"
+    assert latest.json()["error_detail"] == "ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。"
+
+
+def test_processing_jobs_endpoint_lists_recent_jobs(monkeypatch) -> None:
+    upload = client.post(
+        "/api/uploads",
+        data={"student_id": "s-03"},
+        files={"file": ("sheet.png", BytesIO(b"fake-image"), "image/png")},
+    ).json()
+
+    async def fake_extract_llm_ocr_document(**kwargs):
+        normalized = NormalizedOcrDocument(
+            student_id="s-03",
+            source_image_id=kwargs["source_image_id"],
+            source_image_paths=[kwargs["source_image_relpath"]],
+            page_type="worksheet",
+            ocr_confidence_summary=OcrConfidenceSummary(low_confidence_count=0, notes=[]),
+            items=[OcrItem(problem_no="Q1", recognized_answer="2", raw_text="Q1 2", uncertainty=[])],
+            test_id="ct-exhibit-main",
+            source_alias="gemini-flash",
+        )
+        return ({"mode": "confirmation_test"}, normalized, {"mode": "confirmation_test"})
+
+    async def fake_run(*_args, **_kwargs):
+        return routes.AnalysisResult.model_validate(
+            {
+                "weak_units": ["式・因数分解"],
+                "error_patterns": ["符号ミスが散見"],
+                "homework_load_fit": "appropriate",
+                "analysis_rationale": ["確認テストの誤答を反映"],
+                "recommended_homework": [{"problem_no": "A-01", "reason": "復習", "difficulty": "basic"}],
+                "teacher_note": "短い復習を推奨",
+                "fallback_used": False,
+                "source_mode": "live",
+                "problem_feedback": [],
+            }
+        )
+
+    async def fake_refresh_summary_async(*_args, **_kwargs):
+        return {"status": "ok"}
+
+    monkeypatch.setattr(routes, "extract_llm_ocr_document", fake_extract_llm_ocr_document)
+    monkeypatch.setattr(routes.analysis_service, "run", fake_run)
+    monkeypatch.setattr(routes, "_refresh_summary_async", fake_refresh_summary_async)
+
+    queued = client.post(
+        "/api/analysis/enqueue",
+        json={"student_id": "s-03", "source_image_id": upload["source_image_id"]},
+    )
+    assert queued.status_code == 200
+
+    for _ in range(60):
+        latest = client.get(f"/api/analysis/jobs/{queued.json()['job_id']}")
+        if latest.json()["status"] in {"succeeded", "failed"}:
+            break
+        time.sleep(0.1)
+
+    response = client.get("/api/students/s-03/processing-jobs?scope=recent")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload
+    assert payload[0]["student_id"] == "s-03"
+    assert payload[0]["job_type"] == "confirmation_test_analysis"

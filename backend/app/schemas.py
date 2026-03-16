@@ -439,7 +439,10 @@ class ProcessingJob(BaseModel):
     student_id: str
     source_image_ids: list[str]
     status: Literal["queued", "running", "succeeded", "failed"]
+    job_type: str = "confirmation_test_analysis"
+    current_stage: Literal["queued", "ocr", "analysis", "done", "failed"] = "queued"
     progress_message: str = ""
+    notification_message: str | None = None
     error_detail: str | None = None
     result_document_id: int | None = None
     created_at: datetime

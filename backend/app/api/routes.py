@@ -49,7 +49,16 @@ def _find_student(student_id: str):
         return student
     raise HTTPException(status_code=404, detail="Student not found")
 
-
+def _format_processing_error(exc: Exception) -> str:
+    if isinstance(exc, httpx.RequestError):
+        return "ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。"
+    if isinstance(exc, httpx.HTTPStatusError):
+        status_code = exc.response.status_code
+        if status_code == 429:
+            return "AI OCR is temporarily busy. Please wait about 30 seconds and try again."
+        if 500 <= status_code <= 599:
+            return "ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。"
+    return str(exc)
 async def _refresh_summary_async(student_id: str, generation_mode: str = "manual") -> dict:
     student = _find_student(student_id)
     metrics = repo.list_student_metrics(student_id)
@@ -204,10 +213,16 @@ async def _run_ocr_pipeline(student_id: str, source_image_ids: list[str]) -> tup
 
 async def _run_background_job(job_id: str, student_id: str, source_image_ids: list[str]) -> None:
     started_at = datetime.now(timezone.utc).isoformat()
-    repo.update_processing_job(job_id, status="running", progress_message="OCRを実行しています...", started_at=started_at)
+    repo.update_processing_job(
+        job_id,
+        status="running",
+        current_stage="ocr",
+        progress_message="OCRを実行しています...",
+        started_at=started_at,
+    )
     try:
         raw_ocr, normalized = await _run_ocr_pipeline(student_id, source_image_ids)
-        repo.update_processing_job(job_id, progress_message="分析を実行しています...")
+        repo.update_processing_job(job_id, current_stage="analysis", progress_message="分析を実行しています...")
         catalog = load_catalog()
         student = _find_student(student_id)
         analysis = await analysis_service.run(student, normalized, catalog, mode="live", action="initial")
@@ -230,7 +245,9 @@ async def _run_background_job(job_id: str, student_id: str, source_image_ids: li
         repo.update_processing_job(
             job_id,
             status="succeeded",
+            current_stage="done",
             progress_message="処理が完了しました。",
+            notification_message="分析済みに確認テストが追加されました",
             result_document_id=document.document_id,
             finished_at=finished_at,
         )
@@ -240,6 +257,7 @@ async def _run_background_job(job_id: str, student_id: str, source_image_ids: li
         repo.update_processing_job(
             job_id,
             status="failed",
+            current_stage="failed",
             progress_message="処理に失敗しました。",
             error_detail=str(exc),
             finished_at=finished_at,
@@ -369,6 +387,11 @@ async def run_ocr(request: OcrRunRequest) -> dict:
     source_image_ids = _resolve_source_image_ids(request)
     try:
         raw_ocr, normalized = await _run_ocr_pipeline(request.student_id, source_image_ids)
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。",
+        ) from exc
     except httpx.HTTPStatusError as exc:
         status_code = exc.response.status_code
         if status_code == 429:
@@ -393,6 +416,8 @@ async def enqueue_analysis(request: AnalysisEnqueueRequest) -> dict:
         student_id=request.student_id,
         source_image_ids=source_image_ids,
         status="queued",
+        job_type="confirmation_test_analysis",
+        current_stage="queued",
         progress_message="処理待機中です。",
         created_at=datetime.now(timezone.utc),
     )
@@ -408,6 +433,13 @@ def get_analysis_job(job_id: str) -> dict:
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
     return job.model_dump(mode="json")
+
+
+@router.get("/students/{student_id}/processing-jobs")
+def get_student_processing_jobs(student_id: str, scope: str = "recent") -> list[dict]:
+    _find_student(student_id)
+    normalized_scope = scope if scope in {"active", "recent"} else "recent"
+    return [job.model_dump(mode="json") for job in repo.list_processing_jobs(student_id, scope=normalized_scope)]
 
 
 @router.post("/ocr/normalize")
