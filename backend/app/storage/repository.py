@@ -322,17 +322,21 @@ class Repository:
             conn.execute(
                 """
                 INSERT INTO processing_jobs (
-                    job_id, student_id, source_image_ids_json, status, progress_message, error_detail,
+                    job_id, student_id, source_image_ids_json, status, job_type, current_stage,
+                    progress_message, notification_message, error_detail,
                     result_document_id, created_at, started_at, finished_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     job.job_id,
                     job.student_id,
                     json.dumps(job.source_image_ids, ensure_ascii=False),
                     job.status,
+                    job.job_type,
+                    job.current_stage,
                     job.progress_message,
+                    job.notification_message,
                     job.error_detail,
                     job.result_document_id,
                     job.created_at.isoformat(),
@@ -349,12 +353,38 @@ class Repository:
             return None
         return self._row_to_processing_job(row)
 
+    def list_processing_jobs(self, student_id: str, *, scope: str = "recent", limit: int = 10) -> list[ProcessingJob]:
+        with get_connection() as conn:
+            if scope == "active":
+                rows = conn.execute(
+                    """
+                    SELECT * FROM processing_jobs
+                    WHERE student_id = ? AND status IN ('queued', 'running')
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                    """,
+                    (student_id, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT * FROM processing_jobs
+                    WHERE student_id = ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                    """,
+                    (student_id, limit),
+                ).fetchall()
+        return [self._row_to_processing_job(row) for row in rows]
+
     def update_processing_job(
         self,
         job_id: str,
         *,
         status: str | None = None,
+        current_stage: str | None = None,
         progress_message: str | None = None,
+        notification_message: str | None = None,
         error_detail: str | None = None,
         result_document_id: int | None = None,
         started_at: str | None = None,
@@ -365,9 +395,15 @@ class Repository:
         if status is not None:
             assignments.append("status = ?")
             params.append(status)
+        if current_stage is not None:
+            assignments.append("current_stage = ?")
+            params.append(current_stage)
         if progress_message is not None:
             assignments.append("progress_message = ?")
             params.append(progress_message)
+        if notification_message is not None:
+            assignments.append("notification_message = ?")
+            params.append(notification_message)
         if error_detail is not None:
             assignments.append("error_detail = ?")
             params.append(error_detail)
@@ -755,7 +791,10 @@ class Repository:
             student_id=row["student_id"],
             source_image_ids=json.loads(row["source_image_ids_json"]) if row["source_image_ids_json"] else [],
             status=row["status"],
+            job_type=row["job_type"] or "confirmation_test_analysis",
+            current_stage=row["current_stage"] or "queued",
             progress_message=row["progress_message"] or "",
+            notification_message=row["notification_message"],
             error_detail=row["error_detail"],
             result_document_id=row["result_document_id"],
             created_at=row["created_at"],

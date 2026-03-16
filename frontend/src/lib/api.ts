@@ -125,6 +125,10 @@ export function fetchProcessingJob(jobId: string): Promise<ProcessingJob> {
   return request(`/api/analysis/jobs/${jobId}`)
 }
 
+export function fetchStudentProcessingJobs(studentId: string, scope: 'active' | 'recent' = 'recent'): Promise<ProcessingJob[]> {
+  return request(`/api/students/${studentId}/processing-jobs?scope=${scope}`)
+}
+
 export function runAnalysis(studentId: string, normalizedOcr: NormalizedOcr, action: 'initial' | 'regenerate' | 'lighten' = 'initial'): Promise<AnalysisResult> {
   return request('/api/analysis/run', {
     method: 'POST',
