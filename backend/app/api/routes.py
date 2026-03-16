@@ -50,14 +50,14 @@ def _find_student(student_id: str):
     raise HTTPException(status_code=404, detail="Student not found")
 
 def _format_processing_error(exc: Exception) -> str:
-    if isinstance(exc, httpx.RequestError):
-        return "ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。"
     if isinstance(exc, httpx.HTTPStatusError):
         status_code = exc.response.status_code
         if status_code == 429:
             return "AI OCR is temporarily busy. Please wait about 30 seconds and try again."
         if 500 <= status_code <= 599:
             return "ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。"
+    if isinstance(exc, httpx.RequestError):
+        return "ネットワークまたはAI処理の一時障害が発生しました。しばらくして再試行してください。"
     return str(exc)
 async def _refresh_summary_async(student_id: str, generation_mode: str = "manual") -> dict:
     student = _find_student(student_id)
@@ -259,7 +259,7 @@ async def _run_background_job(job_id: str, student_id: str, source_image_ids: li
             status="failed",
             current_stage="failed",
             progress_message="処理に失敗しました。",
-            error_detail=str(exc),
+            error_detail=_format_processing_error(exc),
             finished_at=finished_at,
         )
     finally:
