@@ -19,6 +19,10 @@ logger = logging.getLogger("uvicorn.error")
 
 class AzureOpenAIClient:
     @staticmethod
+    def _is_retryable_status(status_code: int) -> bool:
+        return status_code in {429, 500, 502, 503, 504}
+
+    @staticmethod
     def _data_url(image_bytes: bytes, mime_type: str) -> str:
         encoded = base64.b64encode(image_bytes).decode("ascii")
         return f"data:{mime_type};base64,{encoded}"
@@ -44,12 +48,13 @@ class AzureOpenAIClient:
                     return response.json()
                 except httpx.HTTPStatusError as exc:
                     last_error = exc
+                    status_code = exc.response.status_code
                     logger.warning(
                         "AOAI chat HTTP error: attempt=%s status=%s",
                         attempt + 1,
-                        exc.response.status_code,
+                        status_code,
                     )
-                    if exc.response.status_code != 429 or attempt == 4:
+                    if not self._is_retryable_status(status_code) or attempt == 4:
                         raise
                     retry_after_ms = exc.response.headers.get("retry-after-ms")
                     retry_after = retry_after_ms or exc.response.headers.get("retry-after")

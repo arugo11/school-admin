@@ -461,3 +461,36 @@ def test_analysis_enqueue_marks_failed_when_background_job_errors(monkeypatch) -
     assert latest is not None
     assert latest.json()["status"] == "failed"
     assert "simulated background failure" in latest.json()["error_detail"]
+
+
+def test_analysis_enqueue_sanitizes_azure_500_error(monkeypatch) -> None:
+    upload = client.post(
+        "/api/uploads",
+        data={"student_id": "s-03"},
+        files={"file": ("sheet.png", BytesIO(b"fake-image"), "image/png")},
+    ).json()
+
+    async def fake_extract_llm_ocr_document(**_kwargs):
+        request = httpx.Request("POST", "https://example.invalid")
+        response = httpx.Response(500, request=request)
+        raise httpx.HTTPStatusError("server error", request=request, response=response)
+
+    monkeypatch.setattr(routes, "extract_llm_ocr_document", fake_extract_llm_ocr_document)
+
+    queued = client.post(
+        "/api/analysis/enqueue",
+        json={"student_id": "s-03", "source_image_id": upload["source_image_id"]},
+    )
+    assert queued.status_code == 200
+    job_id = queued.json()["job_id"]
+
+    latest = None
+    for _ in range(30):
+        latest = client.get(f"/api/analysis/jobs/{job_id}")
+        assert latest.status_code == 200
+        if latest.json()["status"] in {"succeeded", "failed"}:
+            break
+        time.sleep(0.1)
+    assert latest is not None
+    assert latest.json()["status"] == "failed"
+    assert latest.json()["error_detail"] == "AI processing is temporarily unavailable. Please retry in a moment."
