@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   approveHomework,
   createStudentDocument,
+  fetchStudentProcessingJobs,
   fetchRagHomeworkRecommendation,
   fetchStudent,
   fetchStudentDocuments,
@@ -17,6 +18,7 @@ import {
 } from '../lib/api'
 import { useDemo } from '../lib/demo-context'
 import type {
+  ProcessingJob,
   RecommendedProblemGroup,
   SchoolWorkProgressItem,
   StudentDocument,
@@ -51,8 +53,10 @@ export function StudentsPage() {
   const [ragRecommendation, setRagRecommendation] = useState<RecommendedProblemGroup[]>([])
   const [ragBusy, setRagBusy] = useState(false)
   const [homeworkApproveBusy, setHomeworkApproveBusy] = useState(false)
+  const [processingJobs, setProcessingJobs] = useState<ProcessingJob[]>([])
+  const [jobNotification, setJobNotification] = useState<string>()
   const navigate = useNavigate()
-  const { setStudent, setBanner, resetFlow } = useDemo()
+  const { setStudent, setBanner, resetFlow, session, markJobNotificationSeen, removePendingJob } = useDemo()
 
   useEffect(() => {
     fetchStudentsOverview()
@@ -62,6 +66,45 @@ export function StudentsPage() {
       })
       .catch((err: Error) => setError(err.message))
   }, [])
+
+  useEffect(() => {
+    if (!selected) return
+    const activeStudent = selected
+    let cancelled = false
+    async function loadJobs() {
+      try {
+        const jobs = await fetchStudentProcessingJobs(activeStudent.student_id, 'recent')
+        if (cancelled) return
+        setProcessingJobs(jobs)
+        const latestSuccess = jobs.find((job) => job.status === 'succeeded' && job.result_document_id && !session.seenJobNotifications.includes(job.job_id))
+        if (latestSuccess) {
+          const [summaryPayload, documentPayload] = await Promise.all([
+            fetchStudentSummary(activeStudent.student_id),
+            fetchStudentDocuments(activeStudent.student_id),
+          ])
+          if (cancelled) return
+          setSummary(summaryPayload)
+          setDocuments(documentPayload)
+          setSelectedDocument(documentPayload.find((document) => document.document_id === latestSuccess.result_document_id) ?? documentPayload[0])
+          setOpenDocumentTypes((prev) => prev.includes('test_report') ? prev : [...prev, 'test_report'])
+          setJobNotification(latestSuccess.notification_message ?? '分析済みに確認テストが追加されました')
+          markJobNotificationSeen(latestSuccess.job_id)
+          removePendingJob(latestSuccess.job_id)
+        }
+        jobs.filter((job) => job.status === 'failed').forEach((job) => removePendingJob(job.job_id))
+      } catch (err) {
+        if (!cancelled) {
+          setError((err as Error).message)
+        }
+      }
+    }
+    void loadJobs()
+    const interval = window.setInterval(loadJobs, 3000)
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [selected, session.seenJobNotifications, markJobNotificationSeen, removePendingJob])
 
   const gradeOptions = ['all', ...Array.from(new Set(students.map((student) => student.grade)))]
   const visibleStudents = classFilter === 'all' ? students : students.filter((student) => student.grade === classFilter)
@@ -286,8 +329,14 @@ export function StudentsPage() {
         {selected ? (
           <SectionCard title={`${selected.display_name} の詳細`}>
             {detailBusy ? <div className="banner compact">詳細を更新しています...</div> : null}
+            {jobNotification ? <div className="banner compact">{jobNotification}</div> : null}
             {summary ? (
               <div className="student-detail-pane">
+                {processingJobs.find((job) => job.status === 'queued' || job.status === 'running') ? (
+                  <div className="banner compact">
+                    処理中: {processingJobs.find((job) => job.status === 'queued' || job.status === 'running')?.progress_message}
+                  </div>
+                ) : null}
                 <div className="detail-actions">
                   <span className={`attention-pill ${selected.attention_level}`}>{selected.grade}</span>
                   <button className="secondary-btn compact-btn" onClick={() => void handleRefreshSummary()}>手動更新</button>

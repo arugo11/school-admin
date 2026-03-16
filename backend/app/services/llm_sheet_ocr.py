@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import mimetypes
 import re
 import io
@@ -13,6 +14,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageOps
 
 from app.clients.azure_openai import AzureOpenAIClient
+from app.clients.gemini_ocr import GeminiOcrClient
 from app.core.config import settings
 from app.schemas import NormalizedOcrDocument, OcrConfidenceSummary, OcrItem
 
@@ -85,6 +87,12 @@ def _cleanup_math_ocr_text(value: str) -> str:
 def _save_crop(image: Image.Image, crop_box: tuple[int, int, int, int], target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     image.crop(crop_box).save(target, format="PNG")
+
+
+def _crop_bytes(image: Image.Image, crop_box: tuple[int, int, int, int]) -> bytes:
+    output = io.BytesIO()
+    image.crop(crop_box).save(output, format="PNG")
+    return output.getvalue()
 
 
 def _build_contact_sheet(crop_dir: Path, regions: list[QuestionRegion], crop_kind: str) -> bytes:
@@ -308,6 +316,137 @@ def _confidence_summary(items: list[OcrItem]) -> OcrConfidenceSummary:
     )
 
 
+def _local_confirmation_regions(image: Image.Image) -> list[QuestionRegion]:
+    regions = _regions_from_visible_questions(image, [])
+    if len(regions) < 2:
+        return []
+    return regions
+
+
+async def _extract_confirmation_document_with_gemini(
+    *,
+    image: Image.Image,
+    student_id: str,
+    source_image_id: str,
+    source_image_relpath: str,
+    gemini_client: GeminiOcrClient,
+    aoai_client: AzureOpenAIClient,
+) -> tuple[dict[str, Any], NormalizedOcrDocument, dict[str, Any]]:
+    regions = _local_confirmation_regions(image)
+    if not regions:
+        raise RuntimeError("confirmation-test-layout-not-detected")
+
+    crop_dir = settings.ocr_debug_dir / f"{source_image_id}_crops"
+    crop_dir.mkdir(parents=True, exist_ok=True)
+    semaphore = asyncio.Semaphore(settings.llm_ocr_concurrency)
+
+    async def recognize_region(region: QuestionRegion) -> tuple[QuestionRegion, dict[str, Any], str | None]:
+        work_target = crop_dir / f"{region.problem_no.lower()}-work.png"
+        final_target = crop_dir / f"{region.problem_no.lower()}-final.png"
+        _save_crop(image, region.work_box, work_target)
+        _save_crop(image, region.final_box, final_target)
+        work_bytes = _crop_bytes(image, region.work_box)
+        final_bytes = _crop_bytes(image, region.final_box)
+        try:
+            async with semaphore:
+                payload = await gemini_client.extract_box_ocr(
+                    problem_no=region.problem_no,
+                    work_image_bytes=work_bytes,
+                    final_image_bytes=final_bytes,
+                )
+            return region, payload, None
+        except Exception as exc:
+            try:
+                fallback_payload = await aoai_client.extract_box_ocr(
+                    problem_no=region.problem_no,
+                    work_image_bytes=work_bytes,
+                    final_image_bytes=final_bytes,
+                )
+                return region, fallback_payload, exc.__class__.__name__
+            except Exception as fallback_exc:
+                return region, {}, f"{exc.__class__.__name__}->{fallback_exc.__class__.__name__}"
+
+    started_read = time.perf_counter()
+    results = await asyncio.gather(*(recognize_region(region) for region in regions))
+    read_duration_ms = (time.perf_counter() - started_read) * 1000
+
+    items: list[OcrItem] = []
+    mapping: list[dict[str, Any]] = []
+    successful_boxes = 0
+    for region, payload, failure in results:
+        work_path = crop_dir / f"{region.problem_no.lower()}-work.png"
+        final_path = crop_dir / f"{region.problem_no.lower()}-final.png"
+        work_text = _cleanup_math_ocr_text(payload.get("work_text", "") or "")
+        final_answer = _cleanup_math_ocr_text(payload.get("final_answer", "") or "")
+        confidence = str(payload.get("confidence", "low") or "low")
+        notes = [str(note) for note in payload.get("notes", [])]
+        uncertainty = list(notes)
+        if failure:
+            uncertainty.append(f"gemini-box-fallback: {failure}")
+        if confidence == "low":
+            uncertainty.append("low-confidence")
+        if not final_answer:
+            uncertainty.append("final-answer-missing")
+        if payload:
+            successful_boxes += 1
+        items.append(
+            OcrItem(
+                problem_no=region.problem_no,
+                recognized_answer=final_answer or "unknown",
+                work_text=work_text or None,
+                final_answer=final_answer or None,
+                answer_source="final_answer" if final_answer else "unknown",
+                source_image_path=source_image_relpath,
+                work_image_path=str(work_path.relative_to(settings.repo_root)),
+                final_image_path=str(final_path.relative_to(settings.repo_root)),
+                raw_text=f"{region.problem_no} | work={work_text} | final={final_answer}",
+                uncertainty=uncertainty,
+            )
+        )
+        mapping.append(
+            {
+                "problem_no": region.problem_no,
+                "row_box": region.row_box,
+                "work_box": region.work_box,
+                "final_box": region.final_box,
+                "work_image_path": str(work_path.relative_to(settings.repo_root)),
+                "final_image_path": str(final_path.relative_to(settings.repo_root)),
+                "failure": failure,
+                "work_text": work_text,
+                "final_answer": final_answer,
+            }
+        )
+    if successful_boxes == 0 and all(not item.final_answer for item in items):
+        raise RuntimeError("confirmation-test-ocr-failed")
+    items.sort(key=lambda item: int(item.problem_no[1:]))
+    document = NormalizedOcrDocument(
+        student_id=student_id,
+        source_image_id=source_image_id,
+        source_image_paths=[source_image_relpath],
+        page_type="worksheet",
+        ocr_confidence_summary=_confidence_summary(items),
+        items=items,
+        test_id="local-confirmation-test",
+        source_alias="gemini-flash",
+    )
+    raw_payload = {"mode": "confirmation_test", "provider": "gemini", "items": [item.model_dump() for item in items]}
+    debug_payload = {
+        "student_id": student_id,
+        "source_image_id": source_image_id,
+        "source_image_path": source_image_relpath,
+        "mode": "confirmation_test",
+        "provider": "gemini",
+        "timing_ms": {
+            "layout_pass": 0.0,
+            "reading_pass": round(read_duration_ms, 1),
+            "total_ocr": round(read_duration_ms, 1),
+        },
+        "mapping": mapping,
+        "normalized": document.model_dump(),
+    }
+    return raw_payload, document, debug_payload
+
+
 async def extract_llm_ocr_document(
     *,
     image_path: Path,
@@ -320,6 +459,20 @@ async def extract_llm_ocr_document(
     mime_type = mimetypes.guess_type(image_path.name)[0] or "image/jpeg"
     started_total = time.perf_counter()
     image_bytes, mime_type = _prepare_llm_image(image, mime_type)
+    if settings.llm_ocr_provider == "gemini":
+        gemini_client = GeminiOcrClient()
+        local_regions = _local_confirmation_regions(image)
+        if local_regions:
+            raw_payload, document, debug_payload = await _extract_confirmation_document_with_gemini(
+                image=image,
+                student_id=student_id,
+                source_image_id=source_image_id,
+                source_image_relpath=source_image_relpath,
+                gemini_client=gemini_client,
+                aoai_client=aoai_client,
+            )
+            debug_payload["timing_ms"]["total_ocr"] = round((time.perf_counter() - started_total) * 1000, 1)
+            return raw_payload, document, debug_payload
 
     started_layout = time.perf_counter()
     layout_payload = await aoai_client.detect_sheet_layout(

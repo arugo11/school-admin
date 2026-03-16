@@ -4,6 +4,24 @@ import os
 from pathlib import Path
 
 
+def _load_dotenv() -> None:
+    repo_root = Path(__file__).resolve().parents[3]
+    env_path = repo_root / ".env"
+    if not env_path.exists():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
+
+_load_dotenv()
+
+
 class Settings:
     def __init__(self) -> None:
         repo_root = Path(__file__).resolve().parents[3]
@@ -20,6 +38,11 @@ class Settings:
         self.azure_openai_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "sit-copilot-demo-chat")
         self.azure_openai_api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
         self.azure_analysis_live_enabled = os.getenv("AZURE_ANALYSIS_LIVE_ENABLED", "false").lower() == "true"
+        self.llm_ocr_provider = os.getenv("LLM_OCR_PROVIDER", "gemini")
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        self.llm_ocr_concurrency = max(1, int(os.getenv("LLM_OCR_CONCURRENCY", "4")))
+        self.llm_ocr_request_timeout_seconds = float(os.getenv("LLM_OCR_REQUEST_TIMEOUT_SECONDS", "12"))
         self.request_timeout_seconds = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "20"))
         self.vision_poll_seconds = float(os.getenv("VISION_POLL_SECONDS", "1.5"))
 
