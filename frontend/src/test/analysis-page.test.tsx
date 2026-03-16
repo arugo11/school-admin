@@ -40,11 +40,11 @@ vi.mock('../lib/demo-context', () => ({
       },
       previewUrl: 'blob:test-preview',
       analysis: {
-        weak_units: ['符号処理'],
-        error_patterns: ['確認テストで 2 問の誤答があった'],
+        weak_units: ['\\frac{1}{2} の計算'],
+        error_patterns: ['Q1 で $\\frac{1}{2}$ を誤答として読んだ'],
         homework_load_fit: 'appropriate',
-        analysis_rationale: ['確認テストをもとに弱点を整理しました。'],
-        recommended_homework: [{ problem_no: 'A-02', reason: '復習', difficulty: 'basic' }],
+        analysis_rationale: ['Q1 の最終解答は $\\frac{1}{2}$ と一致しませんでした。'],
+        recommended_homework: [{ problem_no: 'A-02', reason: '$\\frac{1}{2}$ の復習', difficulty: 'basic' }],
         teacher_note: '短く復習させます。',
         fallback_used: false,
         source_mode: 'live',
@@ -52,14 +52,14 @@ vi.mock('../lib/demo-context', () => ({
           {
             problem_no: 'Q1',
             catalog_problem_no: 'CT-EXHIBIT-MAIN-Q01',
-            expected_answer: '2',
-            recognized_answer: 'wrong',
-            work_text: 'x+1=2',
-            final_answer: 'wrong',
+            expected_answer: '\\frac{1}{2}',
+            recognized_answer: '\\boxed{\\frac{2}{3}}',
+            work_text: 'x=\\frac{2}{3}',
+            final_answer: '\\boxed{\\frac{2}{3}}',
             source_image_path: 'data/uploads/sample.png',
-            grading_basis: '最終解答欄を優先して wrong を採用しました。',
+            grading_basis: '最終解答欄を優先して \\boxed{\\frac{2}{3}} を採用しました。',
             grading_status: 'incorrect',
-            comment: '模範解答と一致しませんでした。',
+            comment: '模範解答 \\frac{1}{2} と一致しませんでした。',
             needs_review: false,
             regrade_available: true,
             regrade_requested: false,
@@ -117,11 +117,11 @@ describe('AnalysisPage', () => {
         regrade_outcome: 'OCR の影響があるため要確認に変更しました。',
       },
       analysis: {
-        weak_units: ['符号処理'],
-        error_patterns: ['確認テストで 2 問の誤答があった'],
+        weak_units: ['\\frac{1}{2} の計算'],
+        error_patterns: ['Q1 で $\\frac{1}{2}$ を誤答として読んだ'],
         homework_load_fit: 'appropriate',
-        analysis_rationale: ['確認テストをもとに弱点を整理しました。'],
-        recommended_homework: [{ problem_no: 'A-02', reason: '復習', difficulty: 'basic' }],
+        analysis_rationale: ['Q1 の最終解答は $\\frac{1}{2}$ と一致しませんでした。'],
+        recommended_homework: [{ problem_no: 'A-02', reason: '$\\frac{1}{2}$ の復習', difficulty: 'basic' }],
         teacher_note: '短く復習させます。',
         fallback_used: false,
         source_mode: 'live',
@@ -129,10 +129,10 @@ describe('AnalysisPage', () => {
           {
             problem_no: 'Q1',
             catalog_problem_no: 'CT-EXHIBIT-MAIN-Q01',
-            expected_answer: '2',
-            recognized_answer: 'wrong',
-            work_text: 'x+1=2',
-            final_answer: 'wrong',
+            expected_answer: '\\frac{1}{2}',
+            recognized_answer: '\\boxed{\\frac{2}{3}}',
+            work_text: 'x=\\frac{2}{3}',
+            final_answer: '\\boxed{\\frac{2}{3}}',
             source_image_path: 'data/uploads/sample.png',
             grading_basis: '最終解答欄に OCR の影響があります。',
             grading_status: 'uncertain',
@@ -156,6 +156,7 @@ describe('AnalysisPage', () => {
     expect(screen.getByText('読み取りと判定')).toBeInTheDocument()
     expect(screen.getByText('Q1')).toBeInTheDocument()
     expect(screen.getByText('誤答')).toBeInTheDocument()
+    expect(document.querySelectorAll('.katex').length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getByRole('button', { name: 'この判定に訂正を依頼' }))
     fireEvent.change(screen.getByPlaceholderText('例: 最終解答欄の数字が薄い / 計算過程に符号が残っている'), {
@@ -166,5 +167,22 @@ describe('AnalysisPage', () => {
     await waitFor(() => expect(mocks.regradeProblem).toHaveBeenCalled())
     expect(mocks.setAnalysis).toHaveBeenCalled()
     expect(mocks.setBanner).toHaveBeenCalledWith('Q1 の訂正依頼を反映しました。')
+  })
+
+  it('renders latex-like answers with katex output', async () => {
+    mocks.fetchRagHomeworkRecommendation.mockResolvedValue({
+      student_id: 's-03',
+      recommended_problem_groups: [],
+      fallback_used: false,
+    })
+
+    render(
+      <MemoryRouter>
+        <AnalysisPage />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => expect(document.querySelectorAll('.katex').length).toBeGreaterThan(0))
+    expect(document.body.textContent).not.toContain('\\frac{1}{2}')
   })
 })

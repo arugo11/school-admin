@@ -26,6 +26,7 @@ import type {
   StudentStateSummary
 } from '../lib/types'
 import { SectionCard } from '../components/section-card'
+import { MathText } from '../components/math-text'
 import { StudentCard } from '../components/student-card'
 
 export function StudentsPage() {
@@ -408,8 +409,8 @@ export function StudentsPage() {
                       {selectedDocument.document_type === 'test_report' && selectedDocument.payload?.analysis ? (
                         <div className="analysis-panel">
                           <h3>最新確認テスト分析</h3>
-                          <p>弱点単元: {selectedDocument.payload.analysis.weak_units.join(' / ') || 'なし'}</p>
-                          <p>誤答傾向: {selectedDocument.payload.analysis.error_patterns.join(' / ') || 'なし'}</p>
+                          <p>弱点単元: <MathText text={selectedDocument.payload.analysis.weak_units.join(' / ') || 'なし'} inline /></p>
+                          <p>誤答傾向: <MathText text={selectedDocument.payload.analysis.error_patterns.join(' / ') || 'なし'} inline /></p>
                           <p>宿題負荷: {selectedDocument.payload.analysis.homework_load_fit}</p>
                           <div className="detail-actions">
                             <button className="secondary-btn compact-btn" disabled={ragBusy} onClick={() => void handleGenerateHomeworkFromDocument()}>
@@ -423,7 +424,7 @@ export function StudentsPage() {
                             <ul className="plain-list">
                               {ragRecommendation.map((item) => (
                                 <li key={item.group_id}>
-                                  {item.group_id} / {item.unit_name} / {item.reason}
+                                  <MathText text={`${item.group_id} / ${item.unit_name} / ${item.reason}`} />
                                 </li>
                               ))}
                             </ul>
