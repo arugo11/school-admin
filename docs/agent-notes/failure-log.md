@@ -77,3 +77,9 @@
 - Evidence: local reset output repeated `AOAI chat HTTP error: attempt=1 status=429` and `AOAI chat retrying after 30.0s` twice in the same reset run.
 - Current root-cause hypothesis: bulk reset is still pushing six sequential summary generations to the shared AOAI deployment, so the retry budget is spent before the reset finishes.
 - Next changed approach: stop the live reset loop, switch the reset script to deterministic fallback summaries for bulk seed refresh, and keep live LLM generation only for manual per-student refresh in the UI.
+
+## 2026-03-16 Pytest capture failure in worktree
+- What failed: two focused `pytest` runs (`backend/tests/test_azure_openai_client.py` and `backend/tests/test_api.py`) exited during teardown before executing tests.
+- Evidence: both runs ended with `FileNotFoundError` inside `_pytest/capture.py` while calling `self.tmpfile.truncate()` after printing `no tests ran`.
+- Current root-cause hypothesis: this worktree environment has a broken global pytest capture setup, so default output capture fails before collection completes.
+- Next changed approach: rerun the same focused targets with `-s` to disable capture and validate the code paths without triggering the broken teardown path.
