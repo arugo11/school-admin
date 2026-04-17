@@ -25,12 +25,6 @@ CREATE TABLE IF NOT EXISTS approvals (
     teacher_comment TEXT NOT NULL,
     approved_at TEXT NOT NULL
 );
-
-CREATE TABLE IF NOT EXISTS replays (
-    student_id TEXT PRIMARY KEY,
-    snapshot_json TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-);
 """
 
 

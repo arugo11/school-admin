@@ -13,6 +13,14 @@ from app.schemas import NormalizedOcrDocument, OcrConfidenceSummary, OcrItem
 client = TestClient(app)
 
 
+class FailingClient:
+    async def analyze(self, system_prompt: str, user_payload: dict) -> dict:
+        raise RuntimeError("skip-live-call")
+
+
+routes.analysis_service.client = FailingClient()
+
+
 def test_students_endpoint_returns_six_students() -> None:
     response = client.get("/api/students")
     assert response.status_code == 200
@@ -23,24 +31,10 @@ def test_upload_rejects_large_image() -> None:
     payload = BytesIO(b"0" * (5 * 1024 * 1024 + 1))
     response = client.post(
         "/api/uploads",
-        data={"student_id": "s-03", "mode": "replay"},
+        data={"student_id": "s-03"},
         files={"file": ("large.png", payload, "image/png")},
     )
     assert response.status_code == 400
-
-
-def test_replay_endpoint_returns_seeded_snapshot() -> None:
-    response = client.get("/api/demo/s-03/replay")
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["student_id"] == "s-03"
-    assert payload["analysis"]["source_mode"] == "replay"
-
-
-def test_replay_endpoint_returns_404_for_student_without_snapshot() -> None:
-    response = client.get("/api/demo/s-01/replay")
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Replay snapshot not found for this student"
 
 
 def test_homework_approval_persists() -> None:
@@ -59,15 +53,30 @@ def test_homework_approval_persists() -> None:
     assert response.json()["approved_problem_nos"] == ["A-02", "A-04"]
 
 
-def test_analysis_run_replay_lighten() -> None:
-    ocr_response = client.get("/api/demo/s-03/replay")
-    normalized = ocr_response.json()["normalized_ocr"]
+def test_analysis_run_lighten() -> None:
+    normalized = client.post(
+        "/api/ocr/normalize",
+        json={
+            "student_id": "s-03",
+            "source_image_id": "img-lighten",
+            "raw_ocr": {
+                "analyzeResult": {
+                    "readResults": [{
+                        "lines": [
+                            {"text": "Q1 wrong", "confidence": 0.98},
+                            {"text": "Q2 wrong", "confidence": 0.98},
+                            {"text": "Q3 2", "confidence": 0.98},
+                        ]
+                    }]
+                }
+            },
+        },
+    ).json()
     response = client.post(
         "/api/analysis/run",
         json={
             "student_id": "s-03",
             "normalized_ocr": normalized,
-            "mode": "replay",
             "action": "lighten",
         },
     )
@@ -100,7 +109,6 @@ def test_analysis_run_includes_problem_feedback_for_confirmation_test() -> None:
         json={
             "student_id": "s-03",
             "normalized_ocr": normalized,
-            "mode": "live",
             "action": "initial",
         },
     )
@@ -164,7 +172,6 @@ def test_problem_regrade_endpoint_updates_target_problem() -> None:
         json={
             "student_id": "s-03",
             "normalized_ocr": normalized,
-            "mode": "live",
             "action": "initial",
         },
     ).json()
@@ -175,7 +182,6 @@ def test_problem_regrade_endpoint_updates_target_problem() -> None:
             "normalized_ocr": normalized,
             "problem_no": "Q1",
             "student_note": "本当は 2 です",
-            "mode": "live",
             "current_analysis": analysis,
         },
     )
@@ -209,7 +215,6 @@ def test_problem_regrade_endpoint_rejects_invalid_problem() -> None:
         json={
             "student_id": "s-03",
             "normalized_ocr": normalized,
-            "mode": "live",
             "action": "initial",
         },
     ).json()
@@ -220,7 +225,6 @@ def test_problem_regrade_endpoint_rejects_invalid_problem() -> None:
             "normalized_ocr": normalized,
             "problem_no": "Q99",
             "student_note": "違うと思います",
-            "mode": "live",
             "current_analysis": analysis,
         },
     )
@@ -230,12 +234,12 @@ def test_problem_regrade_endpoint_rejects_invalid_problem() -> None:
 def test_ocr_run_merges_multiple_uploads(monkeypatch) -> None:
     first = client.post(
         "/api/uploads",
-        data={"student_id": "s-03", "mode": "live"},
+        data={"student_id": "s-03"},
         files={"file": ("first.png", BytesIO(b"first"), "image/png")},
     ).json()
     second = client.post(
         "/api/uploads",
-        data={"student_id": "s-03", "mode": "live"},
+        data={"student_id": "s-03"},
         files={"file": ("second.png", BytesIO(b"second"), "image/png")},
     ).json()
 
@@ -274,7 +278,6 @@ def test_ocr_run_merges_multiple_uploads(monkeypatch) -> None:
         json={
             "student_id": "s-03",
             "source_image_ids": [first["source_image_id"], second["source_image_id"]],
-            "mode": "live",
         },
     )
     assert response.status_code == 200
@@ -287,7 +290,7 @@ def test_ocr_run_merges_multiple_uploads(monkeypatch) -> None:
 def test_ocr_run_uses_llm_ocr_for_confirmation_test_image(monkeypatch) -> None:
     upload = client.post(
         "/api/uploads",
-        data={"student_id": "s-03", "mode": "live"},
+        data={"student_id": "s-03"},
         files={"file": ("sheet.png", BytesIO(b"fake-image"), "image/png")},
     ).json()
 
@@ -324,7 +327,7 @@ def test_ocr_run_uses_llm_ocr_for_confirmation_test_image(monkeypatch) -> None:
     monkeypatch.setattr(routes, "extract_llm_ocr_document", fake_extract_llm_ocr_document)
     response = client.post(
         "/api/ocr/run",
-        json={"student_id": "s-03", "source_image_id": upload["source_image_id"], "mode": "live"},
+        json={"student_id": "s-03", "source_image_id": upload["source_image_id"]},
     )
     assert response.status_code == 200
     payload = response.json()["normalized_ocr"]
@@ -336,7 +339,7 @@ def test_ocr_run_uses_llm_ocr_for_confirmation_test_image(monkeypatch) -> None:
 def test_ocr_run_returns_503_when_llm_ocr_is_rate_limited(monkeypatch) -> None:
     upload = client.post(
         "/api/uploads",
-        data={"student_id": "s-03", "mode": "live"},
+        data={"student_id": "s-03"},
         files={"file": ("sheet.png", BytesIO(b"fake-image"), "image/png")},
     ).json()
 
@@ -348,7 +351,7 @@ def test_ocr_run_returns_503_when_llm_ocr_is_rate_limited(monkeypatch) -> None:
     monkeypatch.setattr(routes, "extract_llm_ocr_document", fake_extract_llm_ocr_document)
     response = client.post(
         "/api/ocr/run",
-        json={"student_id": "s-03", "source_image_id": upload["source_image_id"], "mode": "live"},
+        json={"student_id": "s-03", "source_image_id": upload["source_image_id"]},
     )
     assert response.status_code == 503
     assert "temporarily busy" in response.json()["detail"]
