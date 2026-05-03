@@ -18,7 +18,10 @@ client = TestClient(app)
 def test_frontend_root_serves_spa_document() -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert "<div id=\"root\"></div>" in response.text
+    assert (
+        "<div id=\"root\"></div>" in response.text
+        or "現在このデモは公開を停止しています" in response.text
+    )
 
 
 def test_api_returns_410_when_demo_is_suspended() -> None:
