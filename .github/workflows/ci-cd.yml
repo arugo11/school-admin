@@ -90,6 +90,10 @@ jobs:
       AOAI_ACCOUNT: sitcopilotaoai23088
       AOAI_DEPLOYMENT: sit-copilot-demo-chat
       API_VERSION: 2024-10-21
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -111,21 +115,21 @@ jobs:
         working-directory: frontend
 
       - name: Azure Login
-        if: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' }}
+        if: ${{ env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != '' && env.AZURE_SUBSCRIPTION_ID != '' }}
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Azure Login (Fallback Credentials JSON)
-        if: ${{ !(secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '') && secrets.AZURE_CREDENTIALS != '' }}
+        if: ${{ !(env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != '' && env.AZURE_SUBSCRIPTION_ID != '') && env.AZURE_CREDENTIALS != '' }}
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ env.AZURE_CREDENTIALS }}
 
       - name: Validate Azure Login Secret Configuration
-        if: ${{ secrets.AZURE_CREDENTIALS == '' && (secrets.AZURE_CLIENT_ID == '' || secrets.AZURE_TENANT_ID == '' || secrets.AZURE_SUBSCRIPTION_ID == '') }}
+        if: ${{ env.AZURE_CREDENTIALS == '' && (env.AZURE_CLIENT_ID == '' || env.AZURE_TENANT_ID == '' || env.AZURE_SUBSCRIPTION_ID == '') }}
         run: |
           echo "Missing Azure login secrets. Configure either:"
           echo "  1) AZURE_CLIENT_ID + AZURE_TENANT_ID + AZURE_SUBSCRIPTION_ID (OIDC), or"
@@ -151,8 +155,22 @@ jobs:
 
       - name: Smoke Check Suspended Notice
         run: |
-          curl --fail --silent "$API_URL/" > root.html
-          grep -F "現在このデモは公開を停止しています. 何かあれば me@argo11.devまで" root.html
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage();
+            await page.goto(process.env.API_URL + '/', { waitUntil: 'networkidle' });
+            const text = (await page.textContent('body')).replace(/\s+/g, ' ').trim();
+            if (!text.includes('現在このデモは公開を停止しています. 何かあれば me@argo11.devまで')) {
+              throw new Error(text);
+            }
+            await browser.close();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
         shell: bash
 
       - name: Smoke Check Suspended API
