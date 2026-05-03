@@ -1,46 +1,18 @@
-import { describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 import App from '../App'
-import { DemoProvider } from '../lib/demo-context'
-
-const overview = {
-  total_students: 1,
-  urgent_count: 1,
-  low_completion_count: 0,
-  counseling_priority_count: 1,
-  recommended_actions_today: 1,
-  students: [
-    {
-      student_id: 's-03',
-      display_name: '生徒C',
-      grade: '中2',
-      class_name: '',
-      school_name: '若葉中学校',
-      next_regular_exam_date: '2026-03-24T00:00:00+00:00',
-      days_until_regular_exam: 8,
-      target_level: 'standard',
-      attention_level: 'urgent',
-      homework_completion_rate: 84,
-      one_line_analysis: '努力しているが伸び悩み',
-      recommended_action: '次回は符号処理を確認',
-    }
-  ]
-}
 
 describe('App', () => {
-  it('renders student list from backend data', async () => {
-    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify(overview), { status: 200 })) as typeof fetch
+  it('renders the suspended notice on public routes', () => {
     render(
-      <MemoryRouter initialEntries={['/students']}>
-        <DemoProvider>
-          <App />
-        </DemoProvider>
-      </MemoryRouter>
+      <MemoryRouter initialEntries={['/students']}><App /></MemoryRouter>
     )
-    await waitFor(() => expect(screen.getByText('生徒C')).toBeInTheDocument())
-    expect(screen.getByText('努力しているが伸び悩み')).toBeInTheDocument()
-    expect(screen.getByText('84%')).toBeInTheDocument()
+
+    expect(screen.getByText('公開停止中')).toBeInTheDocument()
+    expect(
+      screen.getByText('現在このデモは公開を停止しています. 何かあれば me@argo11.devまで'),
+    ).toBeInTheDocument()
   })
 })

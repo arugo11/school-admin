@@ -2,9 +2,6 @@ name: CI/CD
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 env:
@@ -27,6 +24,9 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -45,15 +45,15 @@ jobs:
 
       - name: Install Backend Dependencies
         run: |
-          python -m venv .venv
+          uv venv .venv
           source .venv/bin/activate
-          pip install -r backend/requirements.txt
+          uv pip install -r backend/requirements.txt
         shell: bash
 
       - name: Run Backend Tests
         run: |
           source .venv/bin/activate
-          PYTHONPATH=backend pytest backend/tests -q
+          PYTHONPATH=backend uv run pytest backend/tests -q
         shell: bash
 
       - name: Run Frontend Tests
@@ -68,7 +68,7 @@ jobs:
     name: Deploy To Azure
     runs-on: ubuntu-latest
     needs: ci
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       id-token: write
@@ -149,13 +149,15 @@ jobs:
           echo "Deployed URL: $API_URL"
         shell: bash
 
-      - name: Smoke Check Public API
-        run: curl --fail --silent "$API_URL/api/health"
+      - name: Smoke Check Suspended Notice
+        run: |
+          curl --fail --silent "$API_URL/" > root.html
+          grep -F "現在このデモは公開を停止しています. 何かあれば me@argo11.devまで" root.html
         shell: bash
 
-      - name: Install Playwright Browser
-        run: npx playwright install --with-deps chromium
-
-      - name: Run Public Browser E2E
-        run: E2E_BASE_URL="$API_URL" E2E_ROUTE_TIMEOUT_MS=420000 node scripts/e2e_browser_live.mjs
+      - name: Smoke Check Suspended API
+        run: |
+          status_code="$(curl --silent --output api.json --write-out '%{http_code}' "$API_URL/api/health")"
+          test "$status_code" = "410"
+          grep -F "現在このデモは公開を停止しています. 何かあれば me@argo11.devまで" api.json
         shell: bash

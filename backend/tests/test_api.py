@@ -9,9 +9,28 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.api import routes
+from app.core.config import settings
 from app.schemas import NormalizedOcrDocument, OcrConfidenceSummary, OcrItem
 
 client = TestClient(app)
+
+
+def test_frontend_root_serves_spa_document() -> None:
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "<div id=\"root\"></div>" in response.text
+
+
+def test_api_returns_410_when_demo_is_suspended() -> None:
+    original = settings.demo_suspended
+    settings.demo_suspended = True
+    try:
+        response = client.get("/api/health")
+    finally:
+        settings.demo_suspended = original
+
+    assert response.status_code == 410
+    assert response.json()["detail"] == "Demo suspended"
 
 
 def test_students_endpoint_returns_six_students() -> None:

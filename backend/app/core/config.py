@@ -38,6 +38,7 @@ class Settings:
         self.azure_openai_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "sit-copilot-demo-chat")
         self.azure_openai_api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
         self.azure_analysis_live_enabled = os.getenv("AZURE_ANALYSIS_LIVE_ENABLED", "false").lower() == "true"
+        self.demo_suspended = os.getenv("DEMO_SUSPENDED", "false").lower() == "true"
         self.llm_ocr_provider = os.getenv("LLM_OCR_PROVIDER", "gemini")
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")

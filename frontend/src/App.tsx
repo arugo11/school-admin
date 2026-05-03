@@ -1,19 +1,25 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 
-import { AppShell } from './components/app-shell'
-import { AnalysisPage } from './pages/analysis-page'
-import { StudentsPage } from './pages/students-page'
-import { UploadPage } from './pages/upload-page'
+const NOTICE_MESSAGE = '現在このデモは公開を停止しています. 何かあれば me@argo11.devまで'
+
+function SuspendedNoticePage() {
+  return (
+    <main className="suspended-shell">
+      <section className="suspended-card" aria-labelledby="suspended-title">
+        <p className="suspended-eyebrow">School Admin MVP</p>
+        <h1 id="suspended-title" className="suspended-title">
+          公開停止中
+        </h1>
+        <p className="suspended-copy">{NOTICE_MESSAGE}</p>
+      </section>
+    </main>
+  )
+}
 
 export default function App() {
   return (
-    <AppShell>
-      <Routes>
-        <Route path="/" element={<Navigate to="/students" replace />} />
-        <Route path="/students" element={<StudentsPage />} />
-        <Route path="/upload" element={<UploadPage />} />
-        <Route path="/analysis" element={<AnalysisPage />} />
-      </Routes>
-    </AppShell>
+    <Routes>
+      <Route path="*" element={<SuspendedNoticePage />} />
+    </Routes>
   )
 }
