@@ -12,7 +12,6 @@ CONTAINER_ENV_RG="${CONTAINER_ENV_RG:-sit-copilot}"
 CONTAINER_ENV="${CONTAINER_ENV:-sit-copilot-env}"
 
 command -v az >/dev/null 2>&1 || { echo "az CLI が見つかりません。" >&2; exit 1; }
-command -v docker >/dev/null 2>&1 || { echo "docker が見つかりません。" >&2; exit 1; }
 command -v npm >/dev/null 2>&1 || { echo "npm が見つかりません。" >&2; exit 1; }
 
 az account show >/dev/null
@@ -22,14 +21,16 @@ az group show -n "$RG" >/dev/null
 az containerapp env show -g "$CONTAINER_ENV_RG" -n "$CONTAINER_ENV" >/dev/null
 
 echo "[2/4] build frontend and container image"
-az acr login -n "$ACR_NAME" >/dev/null
 (cd "$ROOT_DIR/frontend" && npm run build >/dev/null)
 
 ACR_SERVER="$(az acr show -g "$RG" -n "$ACR_NAME" --query loginServer -o tsv)"
 ACR_USER="$(az acr credential show -g "$RG" -n "$ACR_NAME" --query username -o tsv)"
 ACR_PASS="$(az acr credential show -g "$RG" -n "$ACR_NAME" --query 'passwords[0].value' -o tsv)"
-docker build --network host -f "$ROOT_DIR/backend/Dockerfile" -t "$ACR_SERVER/$IMAGE_NAME:$IMAGE_TAG" "$ROOT_DIR" >/dev/null
-docker push "$ACR_SERVER/$IMAGE_NAME:$IMAGE_TAG" >/dev/null
+az acr build \
+  --registry "$ACR_NAME" \
+  --image "$IMAGE_NAME:$IMAGE_TAG" \
+  --file "$ROOT_DIR/backend/Dockerfile" \
+  "$ROOT_DIR" >/dev/null
 
 echo "[3/4] update container app"
 ENV_ID="$(az containerapp env show -g "$CONTAINER_ENV_RG" -n "$CONTAINER_ENV" --query id -o tsv)"
